@@ -10,7 +10,7 @@ const DEFAULT_SETTINGS = {
   lat: null,
   lon: null,
 };
-const SYNC_KEYS = ['settings', 'layout', 'collapsed', 'cardStyle', 'pinned'];
+const SYNC_KEYS = ['settings', 'layout', 'collapsed', 'cardStyle', 'pinned', 'hidden'];
 const HEX = /^#[0-9a-f]{6}$/i;
 const MAX_IMAGE_SIDE = 1920;
 
@@ -123,6 +123,80 @@ $('cityClear').addEventListener('click', async () => {
   $('cityState').textContent = 'No city set. Weather is hidden.';
 });
 
+/* ---------- folders ---------- */
+
+// Same rule as the new tab page: a folder gets a card when it holds bookmarks directly.
+async function listFolders() {
+  const [root] = await chrome.bookmarks.getTree();
+  const out = [];
+  const walk = (node, path) => {
+    const here = node.title ? path.concat(node.title) : path;
+    if (node.id !== root.id && (node.children || []).some((c) => c.url)) {
+      out.push({ id: node.id, title: node.title || 'Untitled', path: path.join(' / ') });
+    }
+    for (const c of node.children || []) if (!c.url) walk(c, here);
+  };
+  walk(root, []);
+  return out;
+}
+
+async function setHidden(ids) {
+  await chrome.storage.sync.set({ hidden: ids });
+  say('Saved');
+}
+
+async function renderFolders() {
+  const folders = await listFolders();
+  const { hidden } = await chrome.storage.sync.get('hidden');
+  const hiddenSet = new Set(Array.isArray(hidden) ? hidden : []);
+  const box = $('folders');
+  box.textContent = '';
+  if (!folders.length) {
+    box.textContent = 'No bookmark folders found.';
+    return;
+  }
+  for (const f of folders) {
+    const label = document.createElement('label');
+    label.className = 'folder';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !hiddenSet.has(f.id);
+    cb.dataset.id = f.id;
+    const name = document.createElement('span');
+    name.textContent = f.title;
+    const path = document.createElement('span');
+    path.className = 'path';
+    path.textContent = f.path ? `in ${f.path}` : '';
+    label.append(cb, name, path);
+    box.append(label);
+  }
+}
+
+$('folders').addEventListener('change', async (e) => {
+  if (!e.target.matches('input[type="checkbox"]')) return;
+  const { hidden } = await chrome.storage.sync.get('hidden');
+  const set = new Set(Array.isArray(hidden) ? hidden : []);
+  if (e.target.checked) set.delete(e.target.dataset.id);
+  else set.add(e.target.dataset.id);
+  await setHidden([...set]);
+});
+$('foldersAll').addEventListener('click', async () => {
+  await setHidden([]);
+  renderFolders();
+});
+$('foldersNone').addEventListener('click', async () => {
+  await setHidden((await listFolders()).map((f) => f.id));
+  renderFolders();
+});
+
+const refreshFolders = (() => {
+  let t;
+  return () => { clearTimeout(t); t = setTimeout(renderFolders, 200); };
+})();
+for (const ev of ['onCreated', 'onRemoved', 'onChanged', 'onMoved', 'onChildrenReordered', 'onImportEnded']) {
+  chrome.bookmarks[ev].addListener(refreshFolders);
+}
+
 /* ---------- export / import ---------- */
 
 $('export').addEventListener('click', async () => {
@@ -166,6 +240,7 @@ function sanitise(data) {
     }
   }
   if ('pinned' in data) out.pinned = strArray(data.pinned);
+  if ('hidden' in data) out.hidden = strArray(data.hidden);
   if (data.collapsed && typeof data.collapsed === 'object') {
     out.collapsed = {};
     for (const [k, v] of Object.entries(data.collapsed)) if (v === true) out.collapsed[k] = true;
@@ -194,6 +269,7 @@ $('importFile').addEventListener('change', async (e) => {
     }
     await chrome.storage.sync.set(sanitise(parsed.data));
     await load();
+    await renderFolders();
     say('Settings imported');
   } catch (err) {
     say('Could not import that file. Use a file exported from this extension.');
@@ -202,3 +278,4 @@ $('importFile').addEventListener('change', async (e) => {
 });
 
 load();
+renderFolders();

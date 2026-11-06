@@ -25,6 +25,9 @@
     button { padding: 6px 12px; font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
     .hint { color: var(--muted); font-size: 12px; }
     #status { margin-top: 16px; min-height: 18px; color: var(--muted); }
+    #folders { display: flex; flex-direction: column; gap: 4px; }
+    .folder { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .folder .path { color: var(--muted); font-size: 12px; }
   </style>
 </head>
 <body>
@@ -66,13 +69,21 @@
     </div>
     <div id="cityState" class="hint"></div>
 
+    <h2>Folders</h2>
+    <div class="hint">Tick the folders to show as cards on the new tab page. New folders are shown until you untick them.</div>
+    <div class="row" style="margin-top: 8px;">
+      <button id="foldersAll" type="button">Show all</button>
+      <button id="foldersNone" type="button">Hide all</button>
+    </div>
+    <div id="folders"></div>
+
     <h2>Backup</h2>
     <div class="row">
       <button id="export" type="button">Export settings</button>
       <button id="importBtn" type="button">Import settings</button>
       <input id="importFile" type="file" accept="application/json,.json" hidden>
     </div>
-    <div class="hint">Covers settings, card order, icons, colours, collapsed cards and pinned bookmarks. Not the background image.</div>
+    <div class="hint">Covers settings, card order, icons, colours, collapsed cards, pinned bookmarks and which folders are shown. Not the background image.</div>
 
     <div id="status" role="status"></div>
   </main>

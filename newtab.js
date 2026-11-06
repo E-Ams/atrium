@@ -10,7 +10,7 @@ const DEFAULT_SETTINGS = {
   lat: null,
   lon: null,
 };
-const SYNC_KEYS = ['settings', 'layout', 'collapsed', 'cardStyle', 'pinned'];
+const SYNC_KEYS = ['settings', 'layout', 'collapsed', 'cardStyle', 'pinned', 'hidden'];
 const COLORS = ['#e57373', '#f4a261', '#e9c46a', '#81c784', '#4db6ac', '#64b5f6', '#9575cd', '#f06292', '#a1887f', '#90a4ae'];
 const DEFAULT_ICON = '\u{1F4C1}';
 const MIN_COLUMN_WIDTH = 200;
@@ -37,6 +37,7 @@ const state = {
   collapsed: {},
   cardStyle: {},
   pinned: [],
+  hidden: [],
   bgImage: '',
   folders: [],
   byId: new Map(),
@@ -84,7 +85,7 @@ function notify(msg) {
 
 function normalise(key, value) {
   if (key === 'settings') return { ...DEFAULT_SETTINGS, ...(value || {}) };
-  if (key === 'pinned') return Array.isArray(value) ? value : [];
+  if (key === 'pinned' || key === 'hidden') return Array.isArray(value) ? value : [];
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 }
 
@@ -351,10 +352,26 @@ function placeCard(id, colIndex, beforeId) {
   const idx = beforeId ? col.indexOf(beforeId) : -1;
   if (idx >= 0) col.splice(idx, 0, id);
   else col.push(id);
-  state.layout[layout.length] = layout;
+  state.layout[layout.length] = withHidden(layout, state.layout[layout.length]);
   save('layout');
   endDrag();
   renderCards();
+}
+
+// Hidden folders aren't on the page, so a layout read from the page leaves them out.
+// Put them back at their old index so a folder you show again returns to its spot.
+function withHidden(layout, saved) {
+  if (!Array.isArray(saved)) return layout;
+  const hidden = new Set(state.hidden);
+  const exists = new Set(state.folders.map((f) => f.id));
+  return layout.map((ids, i) => {
+    const out = ids.slice();
+    const old = Array.isArray(saved[i]) ? saved[i] : [];
+    old.forEach((id, idx) => {
+      if (hidden.has(id) && exists.has(id) && !out.includes(id)) out.splice(Math.min(idx, out.length), 0, id);
+    });
+    return out;
+  });
 }
 
 function buildColumn(index) {
@@ -387,7 +404,9 @@ function layoutColumns() {
   wrap.textContent = '';
   if (!state.cardEls.length) {
     state.columnCount = 0;
-    wrap.append(el('div', 'empty', 'No bookmarks found.'));
+    wrap.append(el('div', 'empty', state.folders.length
+      ? 'All folders are hidden. Choose folders to show in settings.'
+      : 'No bookmarks found.'));
     return;
   }
   const n = effectiveColumns();
@@ -418,7 +437,7 @@ function layoutColumns() {
     best.append(card);
   }
 
-  const now = readLayout();
+  const now = withHidden(readLayout(), saved);
   if (JSON.stringify(now) !== JSON.stringify(saved)) {
     state.layout[n] = now;
     save('layout');
@@ -426,7 +445,8 @@ function layoutColumns() {
 }
 
 function renderCards() {
-  state.cardEls = state.folders.map(buildCard);
+  const hidden = new Set(state.hidden);
+  state.cardEls = state.folders.filter((f) => !hidden.has(f.id)).map(buildCard);
   layoutColumns();
   syncPinStars();
   applySearch();
