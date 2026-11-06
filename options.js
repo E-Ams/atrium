@@ -154,10 +154,13 @@ async function renderFolders() {
   const folders = await listFolders();
   const { hidden } = await chrome.storage.sync.get('hidden');
   const hiddenSet = new Set(Array.isArray(hidden) ? hidden : []);
-  const box = $('folders');
+  const box = $('folderList');
   box.textContent = '';
   if (!folders.length) {
-    box.textContent = 'No bookmark folders found.';
+    const none = document.createElement('div');
+    none.className = 'no-folders';
+    none.textContent = 'No bookmark folders found.';
+    box.append(none);
     return;
   }
   for (const f of folders) {
@@ -177,7 +180,7 @@ async function renderFolders() {
   }
 }
 
-$('folders').addEventListener('change', async (e) => {
+$('folderList').addEventListener('change', async (e) => {
   if (!e.target.matches('input[type="checkbox"]')) return;
   const { hidden } = await chrome.storage.sync.get('hidden');
   const set = new Set(Array.isArray(hidden) ? hidden : []);
@@ -281,6 +284,23 @@ $('importFile').addEventListener('change', async (e) => {
     console.warn(err);
   }
 });
+
+/* ---------- sub pages ---------- */
+
+// The page shown follows the URL hash (#general, #appearance, ...), so reload keeps your place.
+const PAGES = ['general', 'appearance', 'folders', 'weather', 'backup'];
+
+function showPage() {
+  const want = location.hash.slice(1);
+  const name = PAGES.includes(want) ? want : 'general';
+  for (const p of PAGES) $(`page-${p}`).hidden = p !== name;
+  for (const a of document.querySelectorAll('nav a')) {
+    if (a.getAttribute('href') === `#${name}`) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  }
+}
+window.addEventListener('hashchange', showPage);
+showPage();
 
 load();
 renderFolders();
