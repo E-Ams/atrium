@@ -16,7 +16,13 @@ const MAX_IMAGE_SIDE = 1920;
 
 const $ = (id) => document.getElementById(id);
 
-let settings = { ...DEFAULT_SETTINGS };
+// Changes go into a draft and are only written to storage when Save is clicked.
+// Cancel throws the draft away and shows the saved values again.
+let saved = { ...DEFAULT_SETTINGS };
+let draft = { ...DEFAULT_SETTINGS };
+let savedHidden = [];
+let draftHidden = new Set();
+let pendingImage; // undefined: no change, string: new image data URL, null: remove image
 let statusTimer;
 
 function say(msg) {
@@ -26,44 +32,105 @@ function say(msg) {
   statusTimer = setTimeout(() => { s.textContent = ''; }, 4000);
 }
 
-async function patch(p) {
-  const { settings: stored } = await chrome.storage.sync.get('settings');
-  settings = { ...DEFAULT_SETTINGS, ...(stored || {}), ...p };
-  await chrome.storage.sync.set({ settings });
-  say('Saved');
+function sameHidden() {
+  return savedHidden.length === draftHidden.size && savedHidden.every((id) => draftHidden.has(id));
+}
+
+function isDirty() {
+  return pendingImage !== undefined
+    || !sameHidden()
+    || Object.keys(DEFAULT_SETTINGS).some((k) => draft[k] !== saved[k]);
+}
+
+function updateActions() {
+  const dirty = isDirty();
+  $('save').disabled = !dirty;
+  $('cancel').disabled = !dirty;
+  $('dirtyNote').textContent = dirty ? 'You have unsaved changes.' : '';
+}
+
+function edit(p) {
+  draft = { ...draft, ...p };
+  updateActions();
 }
 
 function fill() {
-  $('columns').value = settings.columns;
-  $('name').value = settings.name;
-  $('theme').value = settings.theme;
-  $('bgColor').value = HEX.test(settings.bgColor) ? settings.bgColor : '#f6f6f4';
-  $('bgColorState').textContent = settings.bgColor ? '' : '(default)';
-  $('city').value = settings.city;
-  $('cityState').textContent = settings.lat != null ? `Using ${settings.cityLabel || settings.city}.` : 'No city set. Weather is hidden.';
+  $('columns').value = draft.columns;
+  $('name').value = draft.name;
+  $('theme').value = draft.theme;
+  $('bgColor').value = HEX.test(draft.bgColor) ? draft.bgColor : '#f6f6f4';
+  $('bgColorState').textContent = draft.bgColor ? '' : '(default)';
+  $('bgImageState').textContent = '';
+  $('city').value = draft.city;
+  $('cityState').textContent = draft.lat != null ? `Using ${draft.cityLabel || draft.city}.` : 'No city set. Weather is hidden.';
 }
 
 async function load() {
-  const { settings: stored } = await chrome.storage.sync.get('settings');
-  settings = { ...DEFAULT_SETTINGS, ...(stored || {}) };
+  const { settings: stored, hidden } = await chrome.storage.sync.get(['settings', 'hidden']);
+  saved = { ...DEFAULT_SETTINGS, ...(stored || {}) };
+  draft = { ...saved };
+  savedHidden = Array.isArray(hidden) ? hidden : [];
+  draftHidden = new Set(savedHidden);
+  pendingImage = undefined;
   fill();
+  updateActions();
 }
+
+$('save').addEventListener('click', async () => {
+  try {
+    await chrome.storage.sync.set({ settings: draft, hidden: [...draftHidden] });
+    if (typeof pendingImage === 'string') await chrome.storage.local.set({ bgImage: pendingImage });
+    else if (pendingImage === null) await chrome.storage.local.remove('bgImage');
+    await load();
+    say('Saved');
+  } catch (err) {
+    say('Could not save your settings.');
+    console.warn(err);
+  }
+});
+
+$('cancel').addEventListener('click', async () => {
+  draft = { ...saved };
+  draftHidden = new Set(savedHidden);
+  pendingImage = undefined;
+  fill();
+  await renderFolders();
+  updateActions();
+  say('Changes discarded');
+});
+
+// Back to Atrium loads the new tab page in this same tab.
+let leaving = false;
+$('back').addEventListener('click', () => {
+  if (isDirty() && !confirm('You have unsaved changes. Leave without saving?')) return;
+  leaving = true; // already confirmed, so skip the browser's leave-page prompt
+  location.href = chrome.runtime.getURL('newtab.html');
+});
+
+// Closing, reloading or leaving the tab with unsaved changes asks first. Chrome shows its own
+// "Leave site?" wording; pages can't set the message text.
+window.addEventListener('beforeunload', (e) => {
+  if (leaving || !isDirty()) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
 
 /* ---------- simple fields ---------- */
 
-$('columns').addEventListener('change', (e) => {
-  const n = Math.min(8, Math.max(1, Math.round(Number(e.target.value)) || 3));
-  e.target.value = n;
-  patch({ columns: n });
-});
-$('name').addEventListener('change', (e) => patch({ name: e.target.value.trim() }));
-$('theme').addEventListener('change', (e) => patch({ theme: e.target.value }));
-$('bgColor').addEventListener('change', async (e) => {
-  await patch({ bgColor: e.target.value });
+function readColumns() {
+  return Math.min(8, Math.max(1, Math.round(Number($('columns').value)) || 3));
+}
+$('columns').addEventListener('input', () => edit({ columns: readColumns() }));
+$('columns').addEventListener('change', (e) => { e.target.value = readColumns(); });
+$('name').addEventListener('input', (e) => edit({ name: e.target.value.trim() }));
+$('theme').addEventListener('change', (e) => edit({ theme: e.target.value }));
+$('bgColor').addEventListener('input', (e) => {
+  edit({ bgColor: e.target.value });
   $('bgColorState').textContent = '';
 });
-$('bgColorClear').addEventListener('click', async () => {
-  await patch({ bgColor: '' });
+$('bgColorClear').addEventListener('click', () => {
+  edit({ bgColor: '' });
+  $('bgColor').value = '#f6f6f4';
   $('bgColorState').textContent = '(default)';
 });
 
@@ -79,17 +146,19 @@ $('bgImage').addEventListener('change', async (e) => {
     canvas.width = Math.round(bmp.width * scale);
     canvas.height = Math.round(bmp.height * scale);
     canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
-    await chrome.storage.local.set({ bgImage: canvas.toDataURL('image/jpeg', 0.85) });
-    say('Background image saved');
+    pendingImage = canvas.toDataURL('image/jpeg', 0.85);
+    $('bgImageState').textContent = 'New image is used after you save.';
+    updateActions();
   } catch (err) {
     say('Could not read that image.');
     console.warn(err);
   }
   e.target.value = '';
 });
-$('bgImageClear').addEventListener('click', async () => {
-  await chrome.storage.local.remove('bgImage');
-  say('Background image removed');
+$('bgImageClear').addEventListener('click', () => {
+  pendingImage = null;
+  $('bgImageState').textContent = 'Image is removed after you save.';
+  updateActions();
 });
 
 /* ---------- weather city ---------- */
@@ -108,7 +177,7 @@ async function findCity() {
       $('cityState').textContent = `No match for "${name}". Try another spelling.`;
       return;
     }
-    await patch({ city: name, cityLabel: hit.name, lat: hit.latitude, lon: hit.longitude });
+    edit({ city: name, cityLabel: hit.name, lat: hit.latitude, lon: hit.longitude });
     $('cityState').textContent = `Using ${hit.name}${hit.country ? `, ${hit.country}` : ''}.`;
   } catch (err) {
     $('cityState').textContent = 'Could not reach the weather service. Check your connection and try again.';
@@ -117,8 +186,8 @@ async function findCity() {
 }
 $('cityFind').addEventListener('click', findCity);
 $('city').addEventListener('keydown', (e) => { if (e.key === 'Enter') findCity(); });
-$('cityClear').addEventListener('click', async () => {
-  await patch({ city: '', cityLabel: '', lat: null, lon: null });
+$('cityClear').addEventListener('click', () => {
+  edit({ city: '', cityLabel: '', lat: null, lon: null });
   $('city').value = '';
   $('cityState').textContent = 'No city set. Weather is hidden.';
 });
@@ -145,15 +214,8 @@ async function listFolders() {
   return out;
 }
 
-async function setHidden(ids) {
-  await chrome.storage.sync.set({ hidden: ids });
-  say('Saved');
-}
-
 async function renderFolders() {
   const folders = await listFolders();
-  const { hidden } = await chrome.storage.sync.get('hidden');
-  const hiddenSet = new Set(Array.isArray(hidden) ? hidden : []);
   const box = $('folderList');
   box.textContent = '';
   if (!folders.length) {
@@ -168,7 +230,7 @@ async function renderFolders() {
     label.className = 'folder';
     const cb = document.createElement('input');
     cb.type = 'checkbox';
-    cb.checked = !hiddenSet.has(f.id);
+    cb.checked = !draftHidden.has(f.id);
     cb.dataset.id = f.id;
     const name = document.createElement('span');
     name.textContent = f.title;
@@ -180,21 +242,21 @@ async function renderFolders() {
   }
 }
 
-$('folderList').addEventListener('change', async (e) => {
+$('folderList').addEventListener('change', (e) => {
   if (!e.target.matches('input[type="checkbox"]')) return;
-  const { hidden } = await chrome.storage.sync.get('hidden');
-  const set = new Set(Array.isArray(hidden) ? hidden : []);
-  if (e.target.checked) set.delete(e.target.dataset.id);
-  else set.add(e.target.dataset.id);
-  await setHidden([...set]);
+  if (e.target.checked) draftHidden.delete(e.target.dataset.id);
+  else draftHidden.add(e.target.dataset.id);
+  updateActions();
 });
 $('foldersAll').addEventListener('click', async () => {
-  await setHidden([]);
-  renderFolders();
+  draftHidden = new Set();
+  await renderFolders();
+  updateActions();
 });
 $('foldersNone').addEventListener('click', async () => {
-  await setHidden((await listFolders()).map((f) => f.id));
-  renderFolders();
+  draftHidden = new Set((await listFolders()).map((f) => f.id));
+  await renderFolders();
+  updateActions();
 });
 
 const refreshFolders = (() => {
@@ -302,5 +364,5 @@ function showPage() {
 window.addEventListener('hashchange', showPage);
 showPage();
 
-load();
-renderFolders();
+// Folders read the draft's hidden list, so render them after it is loaded.
+load().then(renderFolders);
