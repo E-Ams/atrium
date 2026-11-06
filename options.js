@@ -4,12 +4,15 @@ const DEFAULT_SETTINGS = {
   columns: 3,
   name: '',
   theme: 'system',
-  bgColor: '',
+  bgColorLight: '',
+  bgColorDark: '',
   city: '',
   cityLabel: '',
   lat: null,
   lon: null,
 };
+// Page background each mode uses when no colour is set; matches --bg in newtab.css.
+const BG_DEFAULTS = { Light: '#f3f3ef', Dark: '#0e1014' };
 const SYNC_KEYS = ['settings', 'layout', 'collapsed', 'cardStyle', 'pinned', 'hidden'];
 const HEX = /^#[0-9a-f]{6}$/i;
 // Material icon names, e.g. FolderSpecial. Unknown names show the default folder icon.
@@ -17,6 +20,20 @@ const ICON_NAME = /^[A-Za-z0-9]{1,40}$/;
 const MAX_IMAGE_SIDE = 1920;
 
 const $ = (id) => document.getElementById(id);
+
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+// Same rule as the new tab page: older settings had one bgColor for both modes, and it becomes
+// the colour of the mode in use now ('late-edition' was the earlier name for the dark colours).
+function migrateBgColor(s) {
+  const out = { ...s };
+  if (out.bgColor && !out.bgColorLight && !out.bgColorDark) {
+    const dark = out.theme === 'dark' || out.theme === 'late-edition' || (out.theme !== 'light' && prefersDark.matches);
+    out[dark ? 'bgColorDark' : 'bgColorLight'] = out.bgColor;
+  }
+  delete out.bgColor;
+  return out;
+}
 
 // Changes go into a draft and are only written to storage when Save is clicked.
 // Cancel throws the draft away and shows the saved values again.
@@ -61,8 +78,11 @@ function fill() {
   $('name').value = draft.name;
   // 'late-edition' was the earlier name for the dark colours.
   $('theme').value = draft.theme === 'late-edition' ? 'dark' : draft.theme;
-  $('bgColor').value = HEX.test(draft.bgColor) ? draft.bgColor : '#f6f6f4';
-  $('bgColorState').textContent = draft.bgColor ? '' : '(default)';
+  for (const mode of Object.keys(BG_DEFAULTS)) {
+    const v = draft[`bgColor${mode}`];
+    $(`bgColor${mode}`).value = HEX.test(v) ? v : BG_DEFAULTS[mode];
+    $(`bgColor${mode}State`).textContent = v ? '' : '(default)';
+  }
   $('bgImageState').textContent = '';
   $('city').value = draft.city;
   $('cityState').textContent = draft.lat != null ? `Using ${draft.cityLabel || draft.city}.` : 'No city set. Weather is hidden.';
@@ -70,7 +90,7 @@ function fill() {
 
 async function load() {
   const { settings: stored, hidden } = await chrome.storage.sync.get(['settings', 'hidden']);
-  saved = { ...DEFAULT_SETTINGS, ...(stored || {}) };
+  saved = migrateBgColor({ ...DEFAULT_SETTINGS, ...(stored || {}) });
   draft = { ...saved };
   savedHidden = Array.isArray(hidden) ? hidden : [];
   draftHidden = new Set(savedHidden);
@@ -127,15 +147,18 @@ $('columns').addEventListener('input', () => edit({ columns: readColumns() }));
 $('columns').addEventListener('change', (e) => { e.target.value = readColumns(); });
 $('name').addEventListener('input', (e) => edit({ name: e.target.value.trim() }));
 $('theme').addEventListener('change', (e) => edit({ theme: e.target.value }));
-$('bgColor').addEventListener('input', (e) => {
-  edit({ bgColor: e.target.value });
-  $('bgColorState').textContent = '';
-});
-$('bgColorClear').addEventListener('click', () => {
-  edit({ bgColor: '' });
-  $('bgColor').value = '#f6f6f4';
-  $('bgColorState').textContent = '(default)';
-});
+for (const mode of Object.keys(BG_DEFAULTS)) {
+  const key = `bgColor${mode}`;
+  $(key).addEventListener('input', (e) => {
+    edit({ [key]: e.target.value });
+    $(`${key}State`).textContent = '';
+  });
+  $(`${key}Clear`).addEventListener('click', () => {
+    edit({ [key]: '' });
+    $(key).value = BG_DEFAULTS[mode];
+    $(`${key}State`).textContent = '(default)';
+  });
+}
 
 /* ---------- background image ---------- */
 
@@ -297,14 +320,18 @@ function sanitise(data) {
     if (typeof s.name === 'string') clean.name = s.name.slice(0, 60);
     if (['system', 'light', 'dark'].includes(s.theme)) clean.theme = s.theme;
     else if (s.theme === 'late-edition') clean.theme = 'dark';
-    if (typeof s.bgColor === 'string' && (s.bgColor === '' || HEX.test(s.bgColor))) clean.bgColor = s.bgColor;
+    const color = (v) => typeof v === 'string' && (v === '' || HEX.test(v));
+    if (color(s.bgColorLight)) clean.bgColorLight = s.bgColorLight;
+    if (color(s.bgColorDark)) clean.bgColorDark = s.bgColorDark;
+    // Backups from before per-mode colours carry one bgColor; migrateBgColor below files it under a mode.
+    if (color(s.bgColor) && s.bgColor) clean.bgColor = s.bgColor;
     if (typeof s.city === 'string') clean.city = s.city.slice(0, 100);
     if (typeof s.cityLabel === 'string') clean.cityLabel = s.cityLabel.slice(0, 100);
     if (Number.isFinite(s.lat) && Number.isFinite(s.lon)) {
       clean.lat = s.lat;
       clean.lon = s.lon;
     }
-    out.settings = clean;
+    out.settings = migrateBgColor(clean);
   }
   if (data.layout && typeof data.layout === 'object' && !Array.isArray(data.layout)) {
     out.layout = {};

@@ -4,7 +4,8 @@ const DEFAULT_SETTINGS = {
   columns: 3,
   name: '',
   theme: 'system',
-  bgColor: '',
+  bgColorLight: '',
+  bgColorDark: '',
   city: '',
   cityLabel: '',
   lat: null,
@@ -99,8 +100,26 @@ function notify(msg) {
 
 /* ---------- storage ---------- */
 
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+// True when the page shows dark colours: the Dark theme, or Follow system on a dark system.
+// 'late-edition' was the earlier name for today's dark colours, so settings saved with it stay dark.
+function isDarkMode(theme) {
+  return theme === 'dark' || theme === 'late-edition' || (theme !== 'light' && prefersDark.matches);
+}
+
+// Older settings had one bgColor for both modes; it becomes the colour of the mode in use now.
+function migrateBgColor(s) {
+  const out = { ...s };
+  if (out.bgColor && !out.bgColorLight && !out.bgColorDark) {
+    out[isDarkMode(out.theme) ? 'bgColorDark' : 'bgColorLight'] = out.bgColor;
+  }
+  delete out.bgColor;
+  return out;
+}
+
 function normalise(key, value) {
-  if (key === 'settings') return { ...DEFAULT_SETTINGS, ...(value || {}) };
+  if (key === 'settings') return migrateBgColor({ ...DEFAULT_SETTINGS, ...(value || {}) });
   if (key === 'pinned' || key === 'hidden') return Array.isArray(value) ? value : [];
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 }
@@ -179,11 +198,12 @@ async function loadBookmarks() {
 
 function applyTheme() {
   const root = document.documentElement;
-  // 'late-edition' was the earlier name for today's dark colours, so settings saved with it stay dark.
-  const t = state.settings.theme === 'late-edition' ? 'dark' : state.settings.theme;
+  const s = state.settings;
+  const t = s.theme === 'late-edition' ? 'dark' : s.theme;
   if (t === 'light' || t === 'dark') root.dataset.theme = t;
   else delete root.dataset.theme;
-  document.body.style.backgroundColor = state.settings.bgColor || '';
+  // Each mode has its own background colour, so a light colour never ends up behind light text.
+  document.body.style.backgroundColor = (isDarkMode(t) ? s.bgColorDark : s.bgColorLight) || '';
   document.body.style.backgroundImage = state.bgImage ? `url("${state.bgImage}")` : '';
 }
 
@@ -863,6 +883,8 @@ async function init() {
   $('ed-close').addEventListener('click', closeEditor);
 
   $('settings-btn').replaceChildren(muiIcon('Settings'));
+  // Follow system can flip between light and dark while the tab is open; swap the background colour too.
+  prefersDark.addEventListener('change', applyTheme);
   $('settings-btn').addEventListener('click', () => chrome.runtime.openOptionsPage());
   window.addEventListener('resize', debounce(() => {
     if (state.cardEls.length && effectiveColumns() !== state.columnCount) layoutColumns();
