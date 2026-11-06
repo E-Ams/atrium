@@ -142,6 +142,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .card-icon .mui { width: 20px; height: 20px; }
 .folder-icon .mui { width: 16px; height: 16px; }
 .mui { fill: currentColor; }
+.card.has-color .card-icon { color: var(--card-color); }
 .item.dim { opacity: 0.3; }
 .item-link {
   flex: 1;
@@ -461,6 +462,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-radius: 9px;
   background: var(--tile);
   color: var(--accent);
+}
+/* A coloured card's icon and its tile take the card colour instead of the teal accent. */
+[data-theme="late-edition"] .card.has-color .card-icon {
+  color: var(--card-color);
+  background: color-mix(in srgb, var(--card-color) 16%, transparent);
 }
 [data-theme="late-edition"] .card-icon .mui { width: 18px; height: 18px; }
 [data-theme="late-edition"] .card-title {

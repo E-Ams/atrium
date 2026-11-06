@@ -261,6 +261,8 @@ function applyCardStyle(card, id) {
   const st = state.cardStyle[id] || {};
   if (st.color) card.style.setProperty('--card-color', st.color);
   else card.style.removeProperty('--card-color');
+  // has-color lets the CSS paint the card's icon in its colour; uncoloured cards keep the theme's icon colour.
+  card.classList.toggle('has-color', Boolean(st.color));
   setIcon(card.querySelector('.card-icon'), id);
 }
 
