@@ -57,6 +57,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-radius: 4px;
 }
 #search:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.search-icon, .search-key { display: none; }
 
 #pinned { max-width: 1400px; margin: 0 auto 24px; }
 #pinned h2, #pinned-list { margin: 0; }
@@ -286,4 +287,185 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 50%;
+}
+
+/* ---------- Nocturne × Paper theme ---------- */
+/* Dark Nocturne colours on Paper's editorial layout: serif clock, ruled columns, underlined search. */
+
+:root[data-theme="nocturne-paper"] {
+  --bg: #0e1014;
+  --fg: #e6e8ec;
+  --muted: #9aa3b2;
+  --card: #161a21;
+  --border: #262b35;
+  --accent: #7dd3c0;
+  --rule: #e6e8ec;
+  --line: #222731;
+  --tile: #1f2a2c;
+  --bright: #f4f5f7;
+  --serif: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  color-scheme: dark;
+}
+
+[data-theme="nocturne-paper"] body { padding: 48px 32px 72px; }
+
+[data-theme="nocturne-paper"] #top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "date ." "clock weather" "greeting weather";
+  align-items: end;
+  column-gap: 24px;
+  row-gap: 8px;
+  max-width: 1180px;
+  margin: 0 auto 40px;
+  padding-bottom: 24px;
+  text-align: left;
+  border-bottom: 1px solid #3a404c;
+}
+[data-theme="nocturne-paper"] #meta { display: contents; }
+[data-theme="nocturne-paper"] #meta span + span:not(:empty)::before { content: none; }
+[data-theme="nocturne-paper"] #date {
+  grid-area: date;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+[data-theme="nocturne-paper"] #clock {
+  grid-area: clock;
+  font-family: var(--serif);
+  font-size: 104px;
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--bright);
+}
+[data-theme="nocturne-paper"] #greeting {
+  grid-area: greeting;
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 22px;
+  font-style: italic;
+  color: #c3c8d2;
+}
+[data-theme="nocturne-paper"] #weather {
+  grid-area: weather;
+  margin: 0;
+  font-size: 15px;
+  color: #c3c8d2;
+}
+
+[data-theme="nocturne-paper"] #searchwrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 1180px;
+  margin: 0 auto 20px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+}
+[data-theme="nocturne-paper"] #searchwrap:focus-within { border-bottom-color: var(--accent); }
+[data-theme="nocturne-paper"] .search-icon { display: block; flex: none; width: 22px; height: 22px; fill: var(--muted); }
+[data-theme="nocturne-paper"] #search {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+  font-family: var(--serif);
+  font-size: 24px;
+  color: var(--bright);
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+[data-theme="nocturne-paper"] #search:focus { outline: none; }
+[data-theme="nocturne-paper"] .search-key {
+  display: block;
+  font: 12px system-ui, sans-serif;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+[data-theme="nocturne-paper"] #pinned {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  max-width: 1180px;
+  margin: 0 auto 40px;
+}
+[data-theme="nocturne-paper"] #pinned h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+[data-theme="nocturne-paper"] .chip {
+  min-height: 36px;
+  padding: 0 12px 0 10px;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 10px;
+}
+
+[data-theme="nocturne-paper"] #cards { max-width: 1180px; gap: 40px; }
+[data-theme="nocturne-paper"] .col { gap: 44px; }
+
+/* Cards are ruled columns; the card colour tints the top rule. */
+[data-theme="nocturne-paper"] .card {
+  --card-color: var(--rule);
+  background: none;
+  border: 0;
+  border-top: 2px solid var(--card-color);
+  border-radius: 0;
+  overflow: visible;
+}
+[data-theme="nocturne-paper"] .card-head {
+  gap: 12px;
+  padding: 14px 0 10px;
+  background: none;
+  border-bottom: 0;
+}
+[data-theme="nocturne-paper"] .card-icon {
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: var(--tile);
+  color: var(--accent);
+}
+[data-theme="nocturne-paper"] .card-icon .mui { width: 18px; height: 18px; }
+[data-theme="nocturne-paper"] .card-title {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--bright);
+}
+[data-theme="nocturne-paper"] .card .card-list { padding: 0; gap: 0; }
+[data-theme="nocturne-paper"] .card .item,
+[data-theme="nocturne-paper"] .card .folder-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+[data-theme="nocturne-paper"] .folder-name {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-style: italic;
+}
+[data-theme="nocturne-paper"] .popup .card-list { gap: 2px; }
+
+[data-theme="nocturne-paper"] #settings-btn {
+  right: 24px;
+  bottom: 24px;
+  width: 44px;
+  height: 44px;
+  color: #c3c8d2;
 }

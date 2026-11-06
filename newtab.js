@@ -165,8 +165,10 @@ async function loadBookmarks() {
 function applyTheme() {
   const root = document.documentElement;
   const t = state.settings.theme;
-  if (t === 'light' || t === 'dark') root.dataset.theme = t;
+  if (t === 'light' || t === 'dark' || t === 'nocturne-paper') root.dataset.theme = t;
   else delete root.dataset.theme;
+  // Nocturne × Paper shows the "/" shortcut as a key next to the box instead.
+  $('search').placeholder = t === 'nocturne-paper' ? 'Search bookmarks' : 'Search bookmarks  ( / )';
   document.body.style.backgroundColor = state.settings.bgColor || '';
   document.body.style.backgroundImage = state.bgImage ? `url("${state.bgImage}")` : '';
 }
