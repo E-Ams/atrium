@@ -674,9 +674,14 @@ function buildIconGrid() {
   });
 }
 
+// True when q starts at a word in the icon's search text, so "ai" finds the AI icons but not Email.
+function iconMatches(search, q) {
+  return ` ${search}`.includes(` ${q}`);
+}
+
 function filterIcons() {
-  const q = $('ed-search').value.trim().toLowerCase();
-  for (const b of $('ed-icons').children) b.hidden = Boolean(q) && !b.dataset.search.includes(q);
+  const q = $('ed-search').value.trim().toLowerCase().replace(/\s+/g, ' ');
+  for (const b of $('ed-icons').children) b.hidden = Boolean(q) && !iconMatches(b.dataset.search, q);
 }
 
 function markSelectedIcon() {
