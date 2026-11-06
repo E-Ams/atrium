@@ -21,6 +21,7 @@
     }
     nav a:hover { background: var(--active); }
     nav a[aria-current="page"] { background: var(--active); font-weight: 500; }
+    nav .close { display: block; width: 100%; margin-top: 16px; text-align: left; }
     main { flex: 1; min-width: 0; }
 
     .page[hidden] { display: none; }
@@ -84,6 +85,7 @@
       <a href="#folders">Folders</a>
       <a href="#weather">Weather</a>
       <a href="#backup">Backup</a>
+      <button id="close" type="button" class="close">Close settings</button>
     </nav>
 
     <main>
