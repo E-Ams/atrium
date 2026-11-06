@@ -59,7 +59,8 @@ function edit(p) {
 function fill() {
   $('columns').value = draft.columns;
   $('name').value = draft.name;
-  $('theme').value = draft.theme;
+  // 'late-edition' was the earlier name for the dark colours.
+  $('theme').value = draft.theme === 'late-edition' ? 'dark' : draft.theme;
   $('bgColor').value = HEX.test(draft.bgColor) ? draft.bgColor : '#f6f6f4';
   $('bgColorState').textContent = draft.bgColor ? '' : '(default)';
   $('bgImageState').textContent = '';
@@ -294,7 +295,8 @@ function sanitise(data) {
     const clean = { ...DEFAULT_SETTINGS };
     if (Number.isFinite(s.columns)) clean.columns = Math.min(8, Math.max(1, Math.round(s.columns)));
     if (typeof s.name === 'string') clean.name = s.name.slice(0, 60);
-    if (['system', 'light', 'dark', 'late-edition'].includes(s.theme)) clean.theme = s.theme;
+    if (['system', 'light', 'dark'].includes(s.theme)) clean.theme = s.theme;
+    else if (s.theme === 'late-edition') clean.theme = 'dark';
     if (typeof s.bgColor === 'string' && (s.bgColor === '' || HEX.test(s.bgColor))) clean.bgColor = s.bgColor;
     if (typeof s.city === 'string') clean.city = s.city.slice(0, 100);
     if (typeof s.cityLabel === 'string') clean.cityLabel = s.cityLabel.slice(0, 100);

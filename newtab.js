@@ -164,11 +164,10 @@ async function loadBookmarks() {
 
 function applyTheme() {
   const root = document.documentElement;
-  const t = state.settings.theme;
-  if (t === 'light' || t === 'dark' || t === 'late-edition') root.dataset.theme = t;
+  // 'late-edition' was the earlier name for today's dark colours, so settings saved with it stay dark.
+  const t = state.settings.theme === 'late-edition' ? 'dark' : state.settings.theme;
+  if (t === 'light' || t === 'dark') root.dataset.theme = t;
   else delete root.dataset.theme;
-  // Late Edition shows the "/" shortcut as a key next to the box instead.
-  $('search').placeholder = t === 'late-edition' ? 'Search bookmarks' : 'Search bookmarks  ( / )';
   document.body.style.backgroundColor = state.settings.bgColor || '';
   document.body.style.backgroundImage = state.bgImage ? `url("${state.bgImage}")` : '';
 }
