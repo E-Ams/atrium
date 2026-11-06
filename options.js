@@ -125,18 +125,23 @@ $('cityClear').addEventListener('click', async () => {
 
 /* ---------- folders ---------- */
 
-// Same rule as the new tab page: a folder gets a card when it holds bookmarks directly.
+function hasLinks(node) {
+  return (node.children || []).some((c) => c.url || hasLinks(c));
+}
+
+// Same rule as the new tab page: cards are the top-level folders that hold bookmarks
+// anywhere inside them, plus a root folder (e.g. Bookmarks bar) for bookmarks sitting
+// directly in it. Deeper subfolders open as popups inside their card, so they aren't listed.
 async function listFolders() {
   const [root] = await chrome.bookmarks.getTree();
   const out = [];
-  const walk = (node, path) => {
-    const here = node.title ? path.concat(node.title) : path;
-    if (node.id !== root.id && (node.children || []).some((c) => c.url)) {
-      out.push({ id: node.id, title: node.title || 'Untitled', path: path.join(' / ') });
+  for (const top of root.children || []) {
+    const title = top.title || 'Untitled';
+    if ((top.children || []).some((c) => c.url)) out.push({ id: top.id, title, path: '' });
+    for (const c of top.children || []) {
+      if (!c.url && hasLinks(c)) out.push({ id: c.id, title: c.title || 'Untitled', path: title });
     }
-    for (const c of node.children || []) if (!c.url) walk(c, here);
-  };
-  walk(root, []);
+  }
   return out;
 }
 

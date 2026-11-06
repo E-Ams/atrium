@@ -119,26 +119,46 @@ function openUrl(url, newTab) {
 
 /* ---------- bookmarks ---------- */
 
+// A folder node: { id, title, path, entries, total }.
+// entries keep bookmark order and hold links ({ kind: 'link', id, title, url })
+// and subfolders ({ kind: 'folder', node }). Folders with no bookmarks anywhere are dropped.
+function buildNode(node, path, linksOnly) {
+  const here = path.concat(node.title || 'Untitled');
+  const entries = [];
+  let total = 0;
+  for (const c of node.children || []) {
+    if (c.url) {
+      const link = { kind: 'link', id: c.id, title: c.title || c.url, url: c.url };
+      entries.push(link);
+      state.byId.set(c.id, link);
+      total++;
+    } else if (!linksOnly) {
+      const sub = buildNode(c, here, false);
+      if (sub.total) {
+        entries.push({ kind: 'folder', node: sub });
+        total += sub.total;
+      }
+    }
+  }
+  return { id: node.id, title: node.title || 'Untitled', path: here.join(' / '), entries, total };
+}
+
+// Cards are the top-level folders (children of Bookmarks bar, Other bookmarks, ...).
+// A root folder gets its own card only for bookmarks sitting directly in it.
 async function loadBookmarks() {
   const [root] = await chrome.bookmarks.getTree();
-  const folders = [];
-  const walk = (node, path) => {
-    const here = node.title ? path.concat(node.title) : path;
-    const items = [];
-    for (const c of node.children || []) {
-      if (c.url) items.push({ id: c.id, title: c.title || c.url, url: c.url });
-    }
-    if (node.id !== root.id && items.length) {
-      folders.push({ id: node.id, title: node.title || 'Untitled', path: here.join(' / '), items });
-    }
-    for (const c of node.children || []) {
-      if (!c.url) walk(c, here);
-    }
-  };
-  walk(root, []);
-  state.folders = folders;
   state.byId = new Map();
-  for (const f of folders) for (const it of f.items) state.byId.set(it.id, it);
+  const folders = [];
+  for (const top of root.children || []) {
+    const loose = buildNode(top, [], true);
+    if (loose.total) folders.push(loose);
+    for (const c of top.children || []) {
+      if (c.url) continue;
+      const n = buildNode(c, [top.title || 'Untitled'], false);
+      if (n.total) folders.push(n);
+    }
+  }
+  state.folders = folders;
 }
 
 /* ---------- theme and background ---------- */
@@ -243,7 +263,7 @@ function applyCardStyle(card, id) {
   card.querySelector('.card-icon').textContent = st.icon || DEFAULT_ICON;
 }
 
-function buildItem(it) {
+function buildLink(it) {
   const li = el('li', 'item');
   li.dataset.id = it.id;
   const a = el('a', 'item-link', it.title);
@@ -256,6 +276,59 @@ function buildItem(it) {
   return li;
 }
 
+// level: 0 for a row in a card, n for a row inside the nth popup.
+function buildEntry(entry, level) {
+  if (entry.kind === 'link') return buildLink(entry);
+  const sub = entry.node;
+  const li = el('li', 'folder-item');
+  li.dataset.folder = sub.id;
+  const btn = el('button', 'folder-btn');
+  btn.type = 'button';
+  btn.title = sub.path;
+  btn.append(el('span', 'folder-icon', DEFAULT_ICON), el('span', 'folder-name', sub.title), el('span', 'folder-count', String(sub.total)));
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    let x = e.pageX;
+    let y = e.pageY;
+    if (e.detail === 0) {
+      const r = btn.getBoundingClientRect();
+      x = r.left + window.scrollX + 16;
+      y = r.bottom + window.scrollY;
+    }
+    openPopup(sub, x, y, level);
+  });
+  li.append(btn);
+  return li;
+}
+
+/* ---------- subfolder popups ---------- */
+
+const popups = [];
+
+function closePopups(fromLevel = 0) {
+  while (popups.length > fromLevel) popups.pop().remove();
+}
+
+// Opens a popup for a subfolder at the mouse. Opening from level n closes deeper popups.
+function openPopup(node, x, y, level) {
+  closePopups(level);
+  const pop = el('div', 'popup');
+  pop.dataset.level = String(level + 1);
+  pop.append(el('div', 'popup-title', node.title));
+  const list = el('ul', 'card-list');
+  for (const e of node.entries) list.append(buildEntry(e, level + 1));
+  pop.append(list);
+  document.body.append(pop);
+  popups.push(pop);
+  syncPinStars();
+  const w = pop.offsetWidth;
+  const h = pop.offsetHeight;
+  const maxX = window.scrollX + window.innerWidth - w - 8;
+  const maxY = window.scrollY + window.innerHeight - h - 8;
+  pop.style.left = `${Math.max(window.scrollX + 8, Math.min(x, maxX))}px`;
+  pop.style.top = `${Math.max(window.scrollY + 8, Math.min(y, maxY))}px`;
+}
+
 function buildCard(f) {
   const card = el('section', 'card');
   card.dataset.id = f.id;
@@ -265,7 +338,7 @@ function buildCard(f) {
   const icon = el('span', 'card-icon');
   const title = el('span', 'card-title', f.title);
   title.title = f.path;
-  const count = el('span', 'card-count', String(f.items.length));
+  const count = el('span', 'card-count', String(f.total));
   const edit = el('button', 'card-edit', '✎');
   edit.type = 'button';
   edit.title = 'Customise card';
@@ -276,7 +349,7 @@ function buildCard(f) {
   head.append(icon, title, count, edit);
 
   const list = el('ul', 'card-list');
-  for (const it of f.items) list.append(buildItem(it));
+  for (const e of f.entries) list.append(buildEntry(e, 0));
   card.append(head, list);
   applyCardStyle(card, f.id);
 
@@ -454,33 +527,61 @@ function renderCards() {
 
 /* ---------- search ---------- */
 
+function linkMatches(link, q) {
+  return link.title.toLowerCase().includes(q) || link.url.toLowerCase().includes(q);
+}
+
+// Links under a folder that match. inherited = an ancestor folder name matched.
+function matchingLinks(node, q, inherited) {
+  const hit = inherited || node.title.toLowerCase().includes(q);
+  const out = [];
+  for (const e of node.entries) {
+    if (e.kind === 'link') {
+      if (hit || linkMatches(e, q)) out.push(e);
+    } else {
+      out.push(...matchingLinks(e.node, q, hit));
+    }
+  }
+  return out;
+}
+
 function applySearch() {
   const q = $('search').value.trim().toLowerCase();
   const byFolder = new Map(state.folders.map((f) => [f.id, f]));
   const hits = [];
   for (const card of state.cardEls) {
     const f = byFolder.get(card.dataset.id);
-    const folderHit = q && f.title.toLowerCase().includes(q);
+    const folderHit = Boolean(q) && f.title.toLowerCase().includes(q);
     let any = false;
-    for (const li of card.querySelectorAll('.item')) {
-      const it = state.byId.get(li.dataset.id);
-      const hit = !q || folderHit || it.title.toLowerCase().includes(q) || it.url.toLowerCase().includes(q);
+    const rows = card.querySelectorAll(':scope > .card-list > li');
+    f.entries.forEach((entry, i) => {
+      const li = rows[i];
+      let url = null;
+      if (!q) {
+        url = null;
+      } else if (entry.kind === 'link') {
+        if (folderHit || linkMatches(entry, q)) url = entry.url;
+      } else {
+        const m = matchingLinks(entry.node, q, folderHit);
+        if (m.length) url = m[0].url;
+      }
+      const hit = !q || url !== null;
       li.classList.toggle('dim', !hit);
       if (q && hit) {
         any = true;
-        if (!card.classList.contains('collapsed')) hits.push(li);
+        if (!card.classList.contains('collapsed')) hits.push({ li, url });
       }
-    }
+    });
     card.classList.toggle('dim', Boolean(q) && !any);
   }
   // First match = top-most, then left-most visible result.
   let first = null;
   let best = null;
-  for (const li of hits) {
-    const r = li.getBoundingClientRect();
+  for (const h of hits) {
+    const r = h.li.getBoundingClientRect();
     if (!best || r.top < best.top - 1 || (Math.abs(r.top - best.top) <= 1 && r.left < best.left)) {
       best = r;
-      first = li.querySelector('a');
+      first = h.url;
     }
   }
   state.firstMatch = first;
@@ -560,7 +661,7 @@ const refreshBookmarks = debounce(async () => {
 
 function linkFromEvent(e) {
   const a = e.target.closest('a[href]');
-  return a && (a.closest('.card-list') || a.closest('.chip')) ? a : null;
+  return a && (a.closest('.card-list') || a.closest('.chip') || a.closest('.popup')) ? a : null;
 }
 
 async function init() {
@@ -577,7 +678,7 @@ async function init() {
   $('search').addEventListener('input', applySearch);
   $('search').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && state.firstMatch) {
-      openUrl(state.firstMatch.getAttribute('href'), e.ctrlKey || e.metaKey);
+      openUrl(state.firstMatch, e.ctrlKey || e.metaKey);
     } else if (e.key === 'Escape') {
       e.target.value = '';
       applySearch();
@@ -605,7 +706,10 @@ async function init() {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeEditor();
+    if (e.key === 'Escape') {
+      closeEditor();
+      closePopups();
+    }
     if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
     const t = e.target;
     if (t.matches('input, textarea, select') || t.isContentEditable) return;
@@ -618,6 +722,8 @@ async function init() {
   });
   document.addEventListener('click', (e) => {
     if (!$('editor').hidden && !e.target.closest('#editor') && !e.target.closest('.card-edit')) closeEditor();
+    // Clicks inside a popup keep it open; a folder button there replaces deeper popups itself.
+    if (popups.length && !e.target.closest('.popup') && !e.target.closest('.folder-btn')) closePopups();
   });
 
   $('ed-icon').addEventListener('input', (e) => {

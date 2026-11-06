@@ -148,6 +148,42 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .item-link:hover { text-decoration: underline; }
 
+.folder-item.dim { opacity: 0.3; }
+.folder-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  text-align: left;
+  background: none;
+  border: 0;
+}
+.folder-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder-btn:hover .folder-name { text-decoration: underline; }
+.folder-count { color: var(--muted); font-size: 12px; }
+.folder-btn::after { content: "\203a"; color: var(--muted); }
+
+.popup {
+  position: absolute;
+  z-index: 20;
+  min-width: 200px;
+  max-width: 320px;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+.popup-title {
+  padding: 8px 12px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+}
+.popup .item-pin { opacity: 0; }
+.popup .item:hover .item-pin, .popup .item-pin:focus-visible { opacity: 1; }
+
 #editor {
   position: absolute;
   z-index: 10;
