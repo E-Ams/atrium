@@ -29,9 +29,8 @@ Atrium isn't on the Chrome Web Store. To load it yourself:
 | `bookmarks` | Reads your bookmarks to build the cards. |
 | `storage` | Saves your settings and layout. |
 | `favicon` | Shows site icons next to links. |
-| `api.open-meteo.com`, `geocoding-api.open-meteo.com` | Looks up your city and its current weather. |
 
-Atrium sends nothing else anywhere and has no analytics.
+If you set a city for the weather, Atrium sends its name to Open-Meteo to look it up, then its coordinates to get the temperature. It sends nothing else anywhere and has no analytics. See the [privacy policy](PRIVACY.md).
 
 ## Built with
 

@@ -1,27 +1,18 @@
 {
   "manifest_version": 3,
   "name": "Atrium",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A new tab page built from your Chrome bookmarks: folder cards, search, pinned links, and weather.",
+  "minimum_chrome_version": "104",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "action": {
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "32": "icons/icon32.png"
-    }
-  },
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },
   "options_page": "options.html",
-  "permissions": ["bookmarks", "storage", "favicon"],
-  "host_permissions": [
-    "https://api.open-meteo.com/*",
-    "https://geocoding-api.open-meteo.com/*"
-  ]
+  "permissions": ["bookmarks", "storage", "favicon"]
 }
