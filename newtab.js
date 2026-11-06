@@ -384,7 +384,6 @@ function buildCard(f) {
   const icon = el('span', 'card-icon');
   const title = el('span', 'card-title', f.title);
   title.title = f.path;
-  const count = el('span', 'card-count', String(f.total));
   const edit = el('button', 'card-edit', '✎');
   edit.type = 'button';
   edit.title = 'Customise card';
@@ -392,7 +391,7 @@ function buildCard(f) {
     e.stopPropagation();
     openEditor(f.id, edit);
   });
-  head.append(icon, title, count, edit);
+  head.append(icon, title, edit);
 
   const list = el('ul', 'card-list');
   for (const e of f.entries) list.append(buildEntry(e, 0));
