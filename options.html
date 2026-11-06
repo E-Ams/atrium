@@ -21,7 +21,12 @@
     }
     nav a:hover { background: var(--active); }
     nav a[aria-current="page"] { background: var(--active); font-weight: 500; }
-    nav .back { display: block; width: 100%; margin-top: 16px; text-align: left; }
+    /* Plain text link above the heading, not a boxed button. */
+    nav .back {
+      display: inline-flex; align-items: center; gap: 6px; margin: 0 0 20px; padding: 0 10px;
+      color: var(--muted); background: none; border: 0; border-radius: 0;
+    }
+    nav .back:hover { color: var(--fg); text-decoration: underline; }
     main { flex: 1; min-width: 0; }
 
     .page[hidden] { display: none; }
@@ -69,6 +74,7 @@
       .shell { flex-direction: column; gap: 16px; padding: 16px; }
       nav { width: auto; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
       nav h1 { width: 100%; padding: 0; margin-bottom: 8px; }
+      nav .back { width: 100%; padding: 0; margin-bottom: 8px; }
       nav a { margin: 0; }
       .setting { flex-direction: column; align-items: stretch; }
       .setting .control { justify-content: flex-start; }
@@ -79,13 +85,13 @@
 <body>
   <div class="shell">
     <nav aria-label="Settings sections">
+      <button id="back" type="button" class="back"><span aria-hidden="true">←</span>Back to Atrium</button>
       <h1>Atrium settings</h1>
       <a href="#general">General</a>
       <a href="#appearance">Appearance</a>
       <a href="#folders">Folders</a>
       <a href="#weather">Weather</a>
       <a href="#backup">Backup</a>
-      <button id="back" type="button" class="back">Back to Atrium</button>
     </nav>
 
     <main>
