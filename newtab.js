@@ -826,6 +826,7 @@ async function init() {
   });
   $('ed-close').addEventListener('click', closeEditor);
 
+  $('settings-btn').replaceChildren(muiIcon('Settings'));
   $('settings-btn').addEventListener('click', () => chrome.runtime.openOptionsPage());
   window.addEventListener('resize', debounce(() => {
     if (state.cardEls.length && effectiveColumns() !== state.columnCount) layoutColumns();
