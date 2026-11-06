@@ -99,21 +99,18 @@ $('cancel').addEventListener('click', async () => {
   say('Changes discarded');
 });
 
-// Settings open in their own tab, so closing it returns to the new tab page.
-// window.close() is refused for tabs a script didn't open, so close it through the tabs API.
-let closing = false;
-$('close').addEventListener('click', async () => {
-  if (isDirty() && !confirm('You have unsaved changes. Close without saving?')) return;
-  closing = true; // already confirmed, so skip the browser's leave-page prompt
-  const tab = await chrome.tabs.getCurrent();
-  if (tab) await chrome.tabs.remove(tab.id);
-  else window.close();
+// Back to Atrium loads the new tab page in this same tab.
+let leaving = false;
+$('back').addEventListener('click', () => {
+  if (isDirty() && !confirm('You have unsaved changes. Leave without saving?')) return;
+  leaving = true; // already confirmed, so skip the browser's leave-page prompt
+  location.href = chrome.runtime.getURL('newtab.html');
 });
 
-// Closing or reloading the tab with unsaved changes asks first. Chrome shows its own
+// Closing, reloading or leaving the tab with unsaved changes asks first. Chrome shows its own
 // "Leave site?" wording; pages can't set the message text.
 window.addEventListener('beforeunload', (e) => {
-  if (closing || !isDirty()) return;
+  if (leaving || !isDirty()) return;
   e.preventDefault();
   e.returnValue = '';
 });
