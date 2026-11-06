@@ -662,7 +662,8 @@ function buildIconGrid() {
     b.type = 'button';
     b.title = name.replace(/(?<=[a-z0-9])(?=[A-Z])/g, ' ');
     b.dataset.name = name;
-    b.dataset.search = b.title.toLowerCase();
+    // Search matches the name plus keywords, so "database" finds Storage and "backend" finds Dns.
+    b.dataset.search = `${b.title} ${MUI_ICON_TAGS[name] || ''}`.toLowerCase();
     b.append(muiIcon(name));
     box.append(b);
   }
