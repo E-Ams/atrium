@@ -12,7 +12,8 @@ const DEFAULT_SETTINGS = {
 };
 const SYNC_KEYS = ['settings', 'layout', 'collapsed', 'cardStyle', 'pinned', 'hidden'];
 const COLORS = ['#e57373', '#f4a261', '#e9c46a', '#81c784', '#4db6ac', '#64b5f6', '#9575cd', '#f06292', '#a1887f', '#90a4ae'];
-const DEFAULT_ICON = '\u{1F4C1}';
+const DEFAULT_ICON = 'Folder';
+const SVG_NS = 'http://www.w3.org/2000/svg';
 const MIN_COLUMN_WIDTH = 200;
 const WEATHER_MAX_AGE = 30 * 60 * 1000;
 const WEATHER_CHECK_EVERY = 10 * 60 * 1000;
@@ -102,8 +103,6 @@ function save(key) {
     notify(`Couldn't save your changes (${err.message}).`);
   });
 }
-
-const saveCardStyleSoon = debounce(() => save('cardStyle'), 600);
 
 /* ---------- opening links ---------- */
 
@@ -260,7 +259,30 @@ function applyCardStyle(card, id) {
   const st = state.cardStyle[id] || {};
   if (st.color) card.style.setProperty('--card-color', st.color);
   else card.style.removeProperty('--card-color');
-  card.querySelector('.card-icon').textContent = st.icon || DEFAULT_ICON;
+  setIcon(card.querySelector('.card-icon'), id);
+}
+
+/* ---------- folder icons ---------- */
+
+// Saved icon for a card or subfolder; unknown names fall back to the folder icon.
+function iconName(id) {
+  const name = (state.cardStyle[id] || {}).icon;
+  return name && MUI_ICONS[name] ? name : DEFAULT_ICON;
+}
+
+function muiIcon(name) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.classList.add('mui');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', MUI_ICONS[name] || MUI_ICONS[DEFAULT_ICON]);
+  svg.append(path);
+  return svg;
+}
+
+function setIcon(span, id) {
+  span.replaceChildren(muiIcon(iconName(id)));
 }
 
 // Chrome's favicon cache for a page (needs the "favicon" permission).
@@ -297,7 +319,9 @@ function buildEntry(entry, level) {
   const btn = el('button', 'folder-btn');
   btn.type = 'button';
   btn.title = sub.path;
-  btn.append(el('span', 'folder-icon', DEFAULT_ICON), el('span', 'folder-name', sub.title), el('span', 'folder-count', String(sub.total)));
+  const icon = el('span', 'folder-icon');
+  setIcon(icon, sub.id);
+  btn.append(icon, el('span', 'folder-name', sub.title), el('span', 'folder-count', String(sub.total)));
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
     let x = e.pageX;
@@ -309,7 +333,14 @@ function buildEntry(entry, level) {
     }
     openPopup(sub, x, y, level);
   });
-  li.append(btn);
+  const edit = el('button', 'folder-edit', '✎');
+  edit.type = 'button';
+  edit.title = 'Change icon';
+  edit.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openEditor(sub.id, edit, true);
+  });
+  li.append(btn, edit);
   return li;
 }
 
@@ -618,8 +649,36 @@ function buildSwatches() {
   box.addEventListener('click', (e) => {
     const b = e.target.closest('.swatch');
     if (!b || !editingId) return;
-    updateStyle(editingId, { color: b.dataset.color }, false);
+    updateStyle(editingId, { color: b.dataset.color });
   });
+}
+
+function buildIconGrid() {
+  const box = $('ed-icons');
+  for (const name of Object.keys(MUI_ICONS)) {
+    const b = el('button', 'icon-opt');
+    b.type = 'button';
+    b.title = name.replace(/(?<=[a-z0-9])(?=[A-Z])/g, ' ');
+    b.dataset.name = name;
+    b.dataset.search = b.title.toLowerCase();
+    b.append(muiIcon(name));
+    box.append(b);
+  }
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('.icon-opt');
+    if (!b || !editingId) return;
+    updateStyle(editingId, { icon: b.dataset.name });
+  });
+}
+
+function filterIcons() {
+  const q = $('ed-search').value.trim().toLowerCase();
+  for (const b of $('ed-icons').children) b.hidden = Boolean(q) && !b.dataset.search.includes(q);
+}
+
+function markSelectedIcon() {
+  const cur = iconName(editingId);
+  for (const b of $('ed-icons').children) b.classList.toggle('selected', b.dataset.name === cur);
 }
 
 function markSelectedSwatch() {
@@ -627,24 +686,34 @@ function markSelectedSwatch() {
   for (const b of $('ed-colors').children) b.classList.toggle('selected', b.dataset.color === cur);
 }
 
-function updateStyle(id, patch, soon) {
+function updateStyle(id, patch) {
   const st = { ...(state.cardStyle[id] || {}), ...patch };
-  if (!st.icon) delete st.icon;
+  if (!st.icon || st.icon === DEFAULT_ICON) delete st.icon;
   if (!st.color) delete st.color;
   if (Object.keys(st).length) state.cardStyle[id] = st;
   else delete state.cardStyle[id];
-  if (soon) saveCardStyleSoon();
-  else save('cardStyle');
-  const card = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
-  if (card) applyCardStyle(card, id);
-  markSelectedSwatch();
+  save('cardStyle');
+  refreshStyle(id);
 }
 
-function openEditor(id, btn) {
+// Redraws the card and every subfolder row for a folder, and the editor's selection.
+function refreshStyle(id) {
+  const card = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
+  if (card) applyCardStyle(card, id);
+  for (const s of document.querySelectorAll(`.folder-item[data-folder="${CSS.escape(id)}"] .folder-icon`)) setIcon(s, id);
+  markSelectedSwatch();
+  markSelectedIcon();
+}
+
+// iconOnly: subfolders get an icon but no card colour.
+function openEditor(id, btn, iconOnly = false) {
   editingId = id;
   const ed = $('editor');
-  $('ed-icon').value = (state.cardStyle[id] || {}).icon || '';
+  ed.classList.toggle('icon-only', iconOnly);
+  $('ed-search').value = '';
+  filterIcons();
   markSelectedSwatch();
+  markSelectedIcon();
   const r = btn.getBoundingClientRect();
   ed.hidden = false;
   ed.style.top = `${r.bottom + window.scrollY + 4}px`;
@@ -686,6 +755,7 @@ async function init() {
   loadWeather();
   setInterval(loadWeather, WEATHER_CHECK_EVERY);
   buildSwatches();
+  buildIconGrid();
 
   $('search').addEventListener('input', applySearch);
   $('search').addEventListener('keydown', (e) => {
@@ -733,22 +803,18 @@ async function init() {
     for (const c of document.querySelectorAll('.card[draggable="true"]')) c.draggable = false;
   });
   document.addEventListener('click', (e) => {
-    if (!$('editor').hidden && !e.target.closest('#editor') && !e.target.closest('.card-edit')) closeEditor();
+    if (!$('editor').hidden && !e.target.closest('#editor') && !e.target.closest('.card-edit, .folder-edit')) closeEditor();
     // Clicks inside a popup keep it open; a folder button there replaces deeper popups itself.
-    if (popups.length && !e.target.closest('.popup') && !e.target.closest('.folder-btn')) closePopups();
+    // The editor can be open for a subfolder inside a popup, so clicks in it keep popups open too.
+    if (popups.length && !e.target.closest('.popup, #editor') && !e.target.closest('.folder-btn')) closePopups();
   });
 
-  $('ed-icon').addEventListener('input', (e) => {
-    if (editingId) updateStyle(editingId, { icon: e.target.value.trim() }, true);
-  });
+  $('ed-search').addEventListener('input', filterIcons);
   $('ed-reset').addEventListener('click', () => {
     if (!editingId) return;
     delete state.cardStyle[editingId];
     save('cardStyle');
-    const card = document.querySelector(`.card[data-id="${CSS.escape(editingId)}"]`);
-    if (card) applyCardStyle(card, editingId);
-    $('ed-icon').value = '';
-    markSelectedSwatch();
+    refreshStyle(editingId);
   });
   $('ed-close').addEventListener('click', closeEditor);
 

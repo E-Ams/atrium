@@ -12,6 +12,8 @@ const DEFAULT_SETTINGS = {
 };
 const SYNC_KEYS = ['settings', 'layout', 'collapsed', 'cardStyle', 'pinned', 'hidden'];
 const HEX = /^#[0-9a-f]{6}$/i;
+// Material icon names, e.g. FolderSpecial. Unknown names show the default folder icon.
+const ICON_NAME = /^[A-Za-z0-9]{1,40}$/;
 const MAX_IMAGE_SIDE = 1920;
 
 const $ = (id) => document.getElementById(id);
@@ -320,7 +322,7 @@ function sanitise(data) {
     for (const [k, v] of Object.entries(data.cardStyle)) {
       if (!v || typeof v !== 'object') continue;
       const st = {};
-      if (typeof v.icon === 'string' && v.icon) st.icon = v.icon.slice(0, 8);
+      if (typeof v.icon === 'string' && ICON_NAME.test(v.icon)) st.icon = v.icon;
       if (typeof v.color === 'string' && HEX.test(v.color)) st.color = v.color;
       if (Object.keys(st).length) out.cardStyle[k] = st;
     }

@@ -137,7 +137,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .card.collapsed .card-list { display: none; }
 .item { display: flex; align-items: center; gap: 8px; }
 .favicon { flex: none; width: 16px; height: 16px; }
-.folder-icon { flex: none; width: 16px; text-align: center; }
+.card-icon, .folder-icon { flex: none; display: inline-flex; }
+.card-icon .mui { width: 20px; height: 20px; }
+.folder-icon .mui { width: 16px; height: 16px; }
+.mui { fill: currentColor; }
 .item.dim { opacity: 0.3; }
 .item-link {
   flex: 1;
@@ -150,9 +153,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .item-link:hover { text-decoration: underline; }
 
+.folder-item { display: flex; align-items: center; gap: 4px; }
 .folder-item.dim { opacity: 0.3; }
+.folder-edit {
+  flex: none;
+  opacity: 0;
+  border: 0;
+  background: none;
+  padding: 0 2px;
+  color: var(--muted);
+}
+.folder-item:hover .folder-edit, .folder-edit:focus-visible { opacity: 1; }
 .folder-btn {
   width: 100%;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -188,8 +202,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 #editor {
   position: absolute;
-  z-index: 10;
-  width: 230px;
+  z-index: 30;
+  width: 280px;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -200,10 +214,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 #editor[hidden] { display: none; }
-#editor label { display: flex; align-items: center; gap: 8px; }
-#ed-icon {
-  flex: 1;
-  min-width: 0;
+#ed-search {
   padding: 4px 8px;
   font: inherit;
   color: var(--fg);
@@ -211,7 +222,30 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border: 1px solid var(--border);
   border-radius: 4px;
 }
+#ed-icons {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.icon-opt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: 0;
+  color: var(--fg);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+.icon-opt[hidden] { display: none; }
+.icon-opt:hover { background: var(--bg); }
+.icon-opt.selected { border-color: var(--accent); }
+.icon-opt .mui { width: 20px; height: 20px; }
 #ed-colors { display: flex; flex-wrap: wrap; gap: 6px; }
+#editor.icon-only #ed-colors { display: none; }
 .swatch {
   width: 22px;
   height: 22px;

@@ -25,7 +25,8 @@
   <main id="cards"></main>
 
   <div id="editor" hidden>
-    <label>Icon <input id="ed-icon" maxlength="8" placeholder="emoji" autocomplete="off"></label>
+    <input id="ed-search" type="search" placeholder="Search icons" autocomplete="off" spellcheck="false">
+    <div id="ed-icons"></div>
     <div id="ed-colors"></div>
     <div id="ed-actions">
       <button id="ed-reset" type="button">Reset</button>
@@ -35,6 +36,7 @@
 
   <button id="settings-btn" type="button" title="Settings" aria-label="Settings">&#9881;</button>
 
+  <script src="icons.js"></script>
   <script src="newtab.js"></script>
 </body>
 </html>
