@@ -290,7 +290,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ---------- Late Edition theme ---------- */
-/* A newspaper read at night: dark colours on an editorial layout with a serif clock, ruled columns, underlined search. */
+/* A newspaper read at night: dark colours on an editorial layout with a serif clock, ruled columns, underlined search.
+   Clock, weather and search sit in a full-height sidebar; pinned links and cards fill the rest of the page. */
 
 :root[data-theme="late-edition"] {
   --bg: #0e1014;
@@ -307,17 +308,37 @@ button { font: inherit; color: inherit; cursor: pointer; }
   color-scheme: dark;
 }
 
-[data-theme="late-edition"] body { padding: 48px 32px 72px; }
+[data-theme="late-edition"] body {
+  display: flex;
+  align-items: stretch;
+  min-height: 100vh;
+  padding: 0;
+}
+[data-theme="late-edition"] #sidebar {
+  flex: none;
+  width: 340px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  border-right: 1px solid #3a404c;
+}
+[data-theme="late-edition"] #content {
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  padding: 48px 40px 72px;
+}
 
 [data-theme="late-edition"] #top {
   display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas: "date ." "clock weather" "greeting weather";
-  align-items: end;
-  column-gap: 24px;
+  grid-template-areas: "date" "clock" "greeting" "weather";
   row-gap: 8px;
-  max-width: 1180px;
-  margin: 0 auto 40px;
+  margin: 0;
   padding-bottom: 24px;
   text-align: left;
   border-bottom: 1px solid #3a404c;
@@ -335,7 +356,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 [data-theme="late-edition"] #clock {
   grid-area: clock;
   font-family: var(--serif);
-  font-size: 104px;
+  font-size: 60px;
   font-weight: 300;
   line-height: 0.95;
   letter-spacing: -0.03em;
@@ -352,7 +373,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 [data-theme="late-edition"] #weather {
   grid-area: weather;
-  margin: 0;
+  margin: 8px 0 0;
   font-size: 15px;
   color: #c3c8d2;
 }
@@ -360,9 +381,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 [data-theme="late-edition"] #searchwrap {
   display: flex;
   align-items: center;
-  gap: 14px;
-  max-width: 1180px;
-  margin: 0 auto 20px;
+  gap: 12px;
+  margin: 0;
   padding: 8px 0;
   border-bottom: 1px solid var(--rule);
 }
@@ -373,7 +393,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   min-width: 0;
   padding: 4px 0;
   font-family: var(--serif);
-  font-size: 24px;
+  font-size: 20px;
   color: var(--bright);
   background: none;
   border: 0;
@@ -395,8 +415,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 16px;
-  max-width: 1180px;
-  margin: 0 auto 40px;
+  margin: 0 0 40px;
 }
 [data-theme="late-edition"] #pinned h2 {
   margin: 0;
@@ -414,7 +433,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-radius: 10px;
 }
 
-[data-theme="late-edition"] #cards { max-width: 1180px; gap: 40px; }
+[data-theme="late-edition"] #cards { max-width: none; margin: 0; gap: 40px; }
 [data-theme="late-edition"] .col { gap: 44px; }
 
 /* Cards are ruled columns; the card colour tints the top rule. */
@@ -468,4 +487,18 @@ button { font: inherit; color: inherit; cursor: pointer; }
   width: 44px;
   height: 44px;
   color: #c3c8d2;
+}
+
+/* Narrow windows: the sidebar becomes a header above the cards. */
+@media (max-width: 800px) {
+  [data-theme="late-edition"] body { display: block; }
+  [data-theme="late-edition"] #sidebar {
+    width: auto;
+    height: auto;
+    position: static;
+    padding: 32px 24px;
+    border-right: 0;
+    border-bottom: 1px solid #3a404c;
+  }
+  [data-theme="late-edition"] #content { min-height: 0; padding: 32px 24px 72px; }
 }
