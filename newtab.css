@@ -452,7 +452,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   gap: 12px;
   padding: 14px 0 10px;
   background: none;
-  border-bottom: 0;
+  /* Thin rule under the folder name, a step brighter than the row dividers. */
+  border-bottom: 1px solid #3a404c;
 }
 [data-theme="late-edition"] .card-icon {
   width: 32px;
