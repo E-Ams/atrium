@@ -294,7 +294,7 @@ function sanitise(data) {
     const clean = { ...DEFAULT_SETTINGS };
     if (Number.isFinite(s.columns)) clean.columns = Math.min(8, Math.max(1, Math.round(s.columns)));
     if (typeof s.name === 'string') clean.name = s.name.slice(0, 60);
-    if (['system', 'light', 'dark', 'nocturne-paper'].includes(s.theme)) clean.theme = s.theme;
+    if (['system', 'light', 'dark', 'late-edition'].includes(s.theme)) clean.theme = s.theme;
     if (typeof s.bgColor === 'string' && (s.bgColor === '' || HEX.test(s.bgColor))) clean.bgColor = s.bgColor;
     if (typeof s.city === 'string') clean.city = s.city.slice(0, 100);
     if (typeof s.cityLabel === 'string') clean.cityLabel = s.cityLabel.slice(0, 100);

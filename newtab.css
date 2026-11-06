@@ -289,10 +289,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-radius: 50%;
 }
 
-/* ---------- Nocturne × Paper theme ---------- */
-/* Dark Nocturne colours on Paper's editorial layout: serif clock, ruled columns, underlined search. */
+/* ---------- Late Edition theme ---------- */
+/* A newspaper read at night: dark colours on an editorial layout with a serif clock, ruled columns, underlined search. */
 
-:root[data-theme="nocturne-paper"] {
+:root[data-theme="late-edition"] {
   --bg: #0e1014;
   --fg: #e6e8ec;
   --muted: #9aa3b2;
@@ -307,9 +307,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   color-scheme: dark;
 }
 
-[data-theme="nocturne-paper"] body { padding: 48px 32px 72px; }
+[data-theme="late-edition"] body { padding: 48px 32px 72px; }
 
-[data-theme="nocturne-paper"] #top {
+[data-theme="late-edition"] #top {
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-areas: "date ." "clock weather" "greeting weather";
@@ -322,9 +322,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   text-align: left;
   border-bottom: 1px solid #3a404c;
 }
-[data-theme="nocturne-paper"] #meta { display: contents; }
-[data-theme="nocturne-paper"] #meta span + span:not(:empty)::before { content: none; }
-[data-theme="nocturne-paper"] #date {
+[data-theme="late-edition"] #meta { display: contents; }
+[data-theme="late-edition"] #meta span + span:not(:empty)::before { content: none; }
+[data-theme="late-edition"] #date {
   grid-area: date;
   font-size: 12px;
   font-weight: 600;
@@ -332,7 +332,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   text-transform: uppercase;
   color: var(--muted);
 }
-[data-theme="nocturne-paper"] #clock {
+[data-theme="late-edition"] #clock {
   grid-area: clock;
   font-family: var(--serif);
   font-size: 104px;
@@ -342,7 +342,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   font-variant-numeric: tabular-nums;
   color: var(--bright);
 }
-[data-theme="nocturne-paper"] #greeting {
+[data-theme="late-edition"] #greeting {
   grid-area: greeting;
   margin: 0;
   font-family: var(--serif);
@@ -350,14 +350,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
   font-style: italic;
   color: #c3c8d2;
 }
-[data-theme="nocturne-paper"] #weather {
+[data-theme="late-edition"] #weather {
   grid-area: weather;
   margin: 0;
   font-size: 15px;
   color: #c3c8d2;
 }
 
-[data-theme="nocturne-paper"] #searchwrap {
+[data-theme="late-edition"] #searchwrap {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -366,9 +366,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   padding: 8px 0;
   border-bottom: 1px solid var(--rule);
 }
-[data-theme="nocturne-paper"] #searchwrap:focus-within { border-bottom-color: var(--accent); }
-[data-theme="nocturne-paper"] .search-icon { display: block; flex: none; width: 22px; height: 22px; fill: var(--muted); }
-[data-theme="nocturne-paper"] #search {
+[data-theme="late-edition"] #searchwrap:focus-within { border-bottom-color: var(--accent); }
+[data-theme="late-edition"] .search-icon { display: block; flex: none; width: 22px; height: 22px; fill: var(--muted); }
+[data-theme="late-edition"] #search {
   flex: 1;
   min-width: 0;
   padding: 4px 0;
@@ -379,8 +379,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border: 0;
   border-radius: 0;
 }
-[data-theme="nocturne-paper"] #search:focus { outline: none; }
-[data-theme="nocturne-paper"] .search-key {
+[data-theme="late-edition"] #search:focus { outline: none; }
+[data-theme="late-edition"] .search-key {
   display: block;
   font: 12px system-ui, sans-serif;
   color: var(--muted);
@@ -390,7 +390,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   padding: 2px 8px;
 }
 
-[data-theme="nocturne-paper"] #pinned {
+[data-theme="late-edition"] #pinned {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -398,14 +398,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
   max-width: 1180px;
   margin: 0 auto 40px;
 }
-[data-theme="nocturne-paper"] #pinned h2 {
+[data-theme="late-edition"] #pinned h2 {
   margin: 0;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-[data-theme="nocturne-paper"] .chip {
+[data-theme="late-edition"] .chip {
   min-height: 36px;
   padding: 0 12px 0 10px;
   gap: 8px;
@@ -414,11 +414,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-radius: 10px;
 }
 
-[data-theme="nocturne-paper"] #cards { max-width: 1180px; gap: 40px; }
-[data-theme="nocturne-paper"] .col { gap: 44px; }
+[data-theme="late-edition"] #cards { max-width: 1180px; gap: 40px; }
+[data-theme="late-edition"] .col { gap: 44px; }
 
 /* Cards are ruled columns; the card colour tints the top rule. */
-[data-theme="nocturne-paper"] .card {
+[data-theme="late-edition"] .card {
   --card-color: var(--rule);
   background: none;
   border: 0;
@@ -426,13 +426,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-radius: 0;
   overflow: visible;
 }
-[data-theme="nocturne-paper"] .card-head {
+[data-theme="late-edition"] .card-head {
   gap: 12px;
   padding: 14px 0 10px;
   background: none;
   border-bottom: 0;
 }
-[data-theme="nocturne-paper"] .card-icon {
+[data-theme="late-edition"] .card-icon {
   width: 32px;
   height: 32px;
   align-items: center;
@@ -441,28 +441,28 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: var(--tile);
   color: var(--accent);
 }
-[data-theme="nocturne-paper"] .card-icon .mui { width: 18px; height: 18px; }
-[data-theme="nocturne-paper"] .card-title {
+[data-theme="late-edition"] .card-icon .mui { width: 18px; height: 18px; }
+[data-theme="late-edition"] .card-title {
   font-family: var(--serif);
   font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--bright);
 }
-[data-theme="nocturne-paper"] .card .card-list { padding: 0; gap: 0; }
-[data-theme="nocturne-paper"] .card .item,
-[data-theme="nocturne-paper"] .card .folder-item {
+[data-theme="late-edition"] .card .card-list { padding: 0; gap: 0; }
+[data-theme="late-edition"] .card .item,
+[data-theme="late-edition"] .card .folder-item {
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
 }
-[data-theme="nocturne-paper"] .folder-name {
+[data-theme="late-edition"] .folder-name {
   font-family: var(--serif);
   font-size: 15px;
   font-style: italic;
 }
-[data-theme="nocturne-paper"] .popup .card-list { gap: 2px; }
+[data-theme="late-edition"] .popup .card-list { gap: 2px; }
 
-[data-theme="nocturne-paper"] #settings-btn {
+[data-theme="late-edition"] #settings-btn {
   right: 24px;
   bottom: 24px;
   width: 44px;
