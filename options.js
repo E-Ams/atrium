@@ -209,10 +209,10 @@ for (const ev of ['onCreated', 'onRemoved', 'onChanged', 'onMoved', 'onChildrenR
 
 $('export').addEventListener('click', async () => {
   const data = await chrome.storage.sync.get(SYNC_KEYS);
-  const blob = new Blob([JSON.stringify({ app: 'homepage-ext', version: 1, data }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ app: 'atrium-ext', version: 1, data }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'homepage-settings.json';
+  a.download = 'atrium-settings.json';
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 });
@@ -272,8 +272,8 @@ $('importFile').addEventListener('change', async (e) => {
   if (!file) return;
   try {
     const parsed = JSON.parse(await file.text());
-    if (!parsed || parsed.app !== 'homepage-ext' || !parsed.data || typeof parsed.data !== 'object') {
-      throw new Error('Not a Home Page settings file');
+    if (!parsed || !['atrium-ext', 'homepage-ext'].includes(parsed.app) || !parsed.data || typeof parsed.data !== 'object') {
+      throw new Error('Not an Atrium settings file');
     }
     await chrome.storage.sync.set(sanitise(parsed.data));
     await load();

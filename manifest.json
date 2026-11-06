@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Home Page",
+  "name": "Atrium",
   "version": "0.1.0",
   "description": "A new tab page built from your Chrome bookmarks: folder cards, search, pinned links, and weather.",
   "chrome_url_overrides": {
