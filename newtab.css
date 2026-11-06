@@ -476,11 +476,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
 }
-[data-theme="late-edition"] .folder-name {
-  font-family: var(--serif);
-  font-size: 15px;
-  font-style: italic;
-}
 [data-theme="late-edition"] .popup .card-list { gap: 2px; }
 
 /* Sits at the foot of the sidebar instead of floating over the page. */
