@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Home Page",
+  "version": "0.1.0",
+  "description": "A new tab page built from your Chrome bookmarks: folder cards, search, pinned links, and weather.",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "options_page": "options.html",
+  "permissions": ["bookmarks", "storage"],
+  "host_permissions": [
+    "https://api.open-meteo.com/*",
+    "https://geocoding-api.open-meteo.com/*"
+  ]
+}

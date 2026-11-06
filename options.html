@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home Page settings</title>
+  <style>
+    :root { --bg: #f6f6f4; --fg: #1d1d1b; --muted: #6b6b66; --border: #d4d4cf; --card: #fff; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #1b1b1a; --fg: #ececea; --muted: #9a9a94; --border: #3c3c3a; --card: #262625; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 32px 24px; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; }
+    main { max-width: 520px; margin: 0 auto; }
+    h1 { font-size: 20px; font-weight: 500; margin: 0 0 20px; }
+    h2 { font-size: 14px; font-weight: 500; margin: 24px 0 8px; }
+    .row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .row label { width: 120px; flex: none; }
+    input[type="text"], input[type="number"], select {
+      flex: 1; min-width: 0; padding: 6px 8px; font: inherit; color: var(--fg);
+      background: var(--card); border: 1px solid var(--border); border-radius: 4px;
+    }
+    input[type="number"] { flex: none; width: 80px; }
+    input[type="color"] { width: 44px; height: 30px; padding: 0; border: 1px solid var(--border); background: var(--card); }
+    button { padding: 6px 12px; font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
+    .hint { color: var(--muted); font-size: 12px; }
+    #status { margin-top: 16px; min-height: 18px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Home Page settings</h1>
+
+    <h2>Layout</h2>
+    <div class="row"><label for="columns">Columns</label><input id="columns" type="number" min="1" max="8" step="1"></div>
+    <div class="row"><label for="name">Your name</label><input id="name" type="text" maxlength="60" placeholder="Shown in the greeting"></div>
+
+    <h2>Look</h2>
+    <div class="row">
+      <label for="theme">Theme</label>
+      <select id="theme">
+        <option value="system">Follow system</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="bgColor">Background colour</label>
+      <input id="bgColor" type="color" value="#f6f6f4">
+      <button id="bgColorClear" type="button">Use default</button>
+      <span id="bgColorState" class="hint"></span>
+    </div>
+    <div class="row">
+      <label for="bgImage">Background image</label>
+      <input id="bgImage" type="file" accept="image/*">
+      <button id="bgImageClear" type="button">Remove</button>
+    </div>
+    <div class="hint">The image is stored on this computer only. It does not sync between Chrome profiles.</div>
+
+    <h2>Weather</h2>
+    <div class="row">
+      <label for="city">City</label>
+      <input id="city" type="text" placeholder="e.g. Cape Town">
+      <button id="cityFind" type="button">Find</button>
+      <button id="cityClear" type="button">Clear</button>
+    </div>
+    <div id="cityState" class="hint"></div>
+
+    <h2>Backup</h2>
+    <div class="row">
+      <button id="export" type="button">Export settings</button>
+      <button id="importBtn" type="button">Import settings</button>
+      <input id="importFile" type="file" accept="application/json,.json" hidden>
+    </div>
+    <div class="hint">Covers settings, card order, icons, colours, collapsed cards and pinned bookmarks. Not the background image.</div>
+
+    <div id="status" role="status"></div>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

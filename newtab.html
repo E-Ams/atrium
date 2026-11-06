@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New Tab</title>
+  <link rel="stylesheet" href="newtab.css">
+</head>
+<body>
+  <header id="top">
+    <div id="clock"></div>
+    <div id="greeting"></div>
+    <div id="meta"><span id="date"></span><span id="weather"></span></div>
+  </header>
+
+  <div id="searchwrap">
+    <input id="search" type="search" placeholder="Search bookmarks  ( / )" autocomplete="off" spellcheck="false">
+  </div>
+
+  <section id="pinned" hidden>
+    <h2>Pinned</h2>
+    <div id="pinned-list"></div>
+  </section>
+
+  <main id="cards"></main>
+
+  <div id="editor" hidden>
+    <label>Icon <input id="ed-icon" maxlength="8" placeholder="emoji" autocomplete="off"></label>
+    <div id="ed-colors"></div>
+    <div id="ed-actions">
+      <button id="ed-reset" type="button">Reset</button>
+      <button id="ed-close" type="button">Done</button>
+    </div>
+  </div>
+
+  <button id="settings-btn" type="button" title="Settings" aria-label="Settings">&#9881;</button>
+
+  <script src="newtab.js"></script>
+</body>
+</html>
