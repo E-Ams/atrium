@@ -134,10 +134,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 #weather {
   grid-area: weather;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-top: 8px;
   font-size: 15px;
   color: var(--soft);
 }
+#weather .mui { flex: none; width: 22px; height: 22px; fill: var(--accent); }
 
 #searchwrap {
   display: flex;

@@ -32,6 +32,19 @@ const WMO = {
   95: 'Thunderstorm', 96: 'Thunderstorm', 99: 'Thunderstorm',
 };
 
+// Material icon for a WMO weather code, or null for codes Open-Meteo doesn't send.
+function weatherIcon(code) {
+  if (!(code in WMO)) return null;
+  if (code <= 1) return 'WbSunny';
+  if (code === 2) return 'FilterDrama';
+  if (code === 3) return 'Cloud';
+  if (code < 50) return 'Foggy';
+  if (code < 60) return 'WaterDrop';
+  if (code < 70 || (code >= 80 && code < 85)) return 'Umbrella';
+  if (code < 90) return 'AcUnit';
+  return 'Thunderstorm';
+}
+
 const state = {
   settings: { ...DEFAULT_SETTINGS },
   layout: {},
@@ -214,7 +227,9 @@ async function loadWeather() {
     return;
   }
   const label = s.cityLabel ? `${s.cityLabel} ` : '';
-  box.textContent = `${label}${Math.round(data.temp)}°C ${WMO[data.code] || ''}`.trim();
+  const text = document.createTextNode(`${label}${Math.round(data.temp)}°C ${WMO[data.code] || ''}`.trim());
+  const icon = weatherIcon(data.code);
+  box.replaceChildren(...(icon ? [muiIcon(icon)] : []), text);
 }
 
 /* ---------- pinned ---------- */
