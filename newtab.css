@@ -135,7 +135,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .card-list { list-style: none; margin: 0; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
 .card.collapsed .card-list { display: none; }
-.item { display: flex; align-items: center; gap: 6px; }
+.item { display: flex; align-items: center; gap: 8px; }
+.favicon { flex: none; width: 16px; height: 16px; }
+.folder-icon { flex: none; width: 16px; text-align: center; }
 .item.dim { opacity: 0.3; }
 .item-link {
   flex: 1;
@@ -153,7 +155,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 0;
   text-align: left;
   background: none;

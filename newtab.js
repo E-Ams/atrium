@@ -231,7 +231,7 @@ function renderPinned() {
     x.type = 'button';
     x.title = 'Unpin';
     x.addEventListener('click', () => togglePin(it.id));
-    chip.append(a, x);
+    chip.append(favicon(it.url), a, x);
     list.append(chip);
   }
 }
@@ -263,6 +263,18 @@ function applyCardStyle(card, id) {
   card.querySelector('.card-icon').textContent = st.icon || DEFAULT_ICON;
 }
 
+// Chrome's favicon cache for a page (needs the "favicon" permission).
+// Unknown pages get Chrome's default globe icon.
+function favicon(url) {
+  const img = el('img', 'favicon');
+  img.src = `${chrome.runtime.getURL('/_favicon/')}?pageUrl=${encodeURIComponent(url)}&size=32`;
+  img.width = 16;
+  img.height = 16;
+  img.alt = '';
+  img.loading = 'lazy';
+  return img;
+}
+
 function buildLink(it) {
   const li = el('li', 'item');
   li.dataset.id = it.id;
@@ -272,7 +284,7 @@ function buildLink(it) {
   const pin = el('button', 'item-pin');
   pin.type = 'button';
   pin.addEventListener('click', () => togglePin(it.id));
-  li.append(a, pin);
+  li.append(favicon(it.url), a, pin);
   return li;
 }
 

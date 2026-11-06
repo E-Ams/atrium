@@ -7,7 +7,7 @@
     "newtab": "newtab.html"
   },
   "options_page": "options.html",
-  "permissions": ["bookmarks", "storage"],
+  "permissions": ["bookmarks", "storage", "favicon"],
   "host_permissions": [
     "https://api.open-meteo.com/*",
     "https://geocoding-api.open-meteo.com/*"
