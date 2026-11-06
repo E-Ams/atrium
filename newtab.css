@@ -291,7 +291,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* ---------- Late Edition theme ---------- */
 /* A newspaper read at night: dark colours on an editorial layout with a serif clock, ruled columns, underlined search.
-   Clock, weather and search sit in a full-height sidebar; pinned links and cards fill the rest of the page. */
+   Clock, weather, search, pinned links and settings sit in a full-height sidebar; the cards fill the rest of the page. */
 
 :root[data-theme="late-edition"] {
   --bg: #0e1014;
@@ -412,11 +412,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 [data-theme="late-edition"] #pinned {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-  margin: 0 0 40px;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
 }
+[data-theme="late-edition"] #pinned[hidden] { display: none; }
 [data-theme="late-edition"] #pinned h2 {
   margin: 0;
   font-size: 12px;
@@ -432,6 +432,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   font-weight: 500;
   border-radius: 10px;
 }
+[data-theme="late-edition"] .chip { max-width: 100%; }
+[data-theme="late-edition"] .chip a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 [data-theme="late-edition"] #cards { max-width: none; margin: 0; gap: 40px; }
 [data-theme="late-edition"] .col { gap: 44px; }
@@ -481,9 +483,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 [data-theme="late-edition"] .popup .card-list { gap: 2px; }
 
+/* Sits at the foot of the sidebar instead of floating over the page. */
 [data-theme="late-edition"] #settings-btn {
-  right: 24px;
-  bottom: 24px;
+  position: static;
+  flex: none;
+  align-self: flex-start;
+  margin-top: auto;
   width: 44px;
   height: 44px;
   color: #c3c8d2;
@@ -501,4 +506,5 @@ button { font: inherit; color: inherit; cursor: pointer; }
     border-bottom: 1px solid #3a404c;
   }
   [data-theme="late-edition"] #content { min-height: 0; padding: 32px 24px 72px; }
+  [data-theme="late-edition"] #settings-btn { position: fixed; right: 24px; bottom: 24px; margin: 0; }
 }

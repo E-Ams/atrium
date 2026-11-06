@@ -20,14 +20,16 @@
       <input id="search" type="search" placeholder="Search bookmarks  ( / )" aria-label="Search bookmarks" autocomplete="off" spellcheck="false">
       <kbd class="search-key" aria-hidden="true">/</kbd>
     </div>
-  </div>
 
-  <div id="content">
     <section id="pinned" hidden>
       <h2>Pinned</h2>
       <div id="pinned-list"></div>
     </section>
 
+    <button id="settings-btn" type="button" title="Settings" aria-label="Settings">&#9881;</button>
+  </div>
+
+  <div id="content">
     <main id="cards"></main>
   </div>
 
@@ -40,8 +42,6 @@
       <button id="ed-close" type="button">Done</button>
     </div>
   </div>
-
-  <button id="settings-btn" type="button" title="Settings" aria-label="Settings">&#9881;</button>
 
   <script src="icons.js"></script>
   <script src="newtab.js"></script>
