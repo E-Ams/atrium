@@ -5,22 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atrium settings</title>
   <style>
-    :root { --bg: #f6f6f4; --fg: #1d1d1b; --muted: #6b6b66; --border: #d4d4cf; --card: #fff; --accent: #3b82f6; --active: #e8e8e4; }
+    /* Same colours as newtab.css (keep the two in sync). Light by default; dark from the Dark theme
+       or Follow system on a dark system. options.js sets data-theme from the Theme setting. */
+    :root {
+      --bg: #f3f3ef; --fg: #16181d; --muted: #5a5e66; --card: #ffffff; --head: #e9e9e4;
+      --border: #dcddd7; --divider: #c9cac4; --accent: #1f7a6b; --on-accent: #ffffff;
+      --rule: #16181d; --line: #e3e4de; --bright: #0e1014;
+      --serif: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      color-scheme: light;
+    }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #1b1b1a; --fg: #ececea; --muted: #9a9a94; --border: #3c3c3a; --card: #262625; --active: #333331; }
+      :root:not([data-theme="light"]) {
+        --bg: #0e1014; --fg: #e6e8ec; --muted: #9aa3b2; --card: #161a21; --head: #161a21;
+        --border: #262b35; --divider: #3a404c; --accent: #7dd3c0; --on-accent: #0e1014;
+        --rule: #e6e8ec; --line: #222731; --bright: #f4f5f7;
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0e1014; --fg: #e6e8ec; --muted: #9aa3b2; --card: #161a21; --head: #161a21;
+      --border: #262b35; --divider: #3a404c; --accent: #7dd3c0; --on-accent: #0e1014;
+      --rule: #e6e8ec; --line: #222731; --bright: #f4f5f7;
+      color-scheme: dark;
     }
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-    .shell { display: flex; max-width: 820px; margin: 0 auto; padding: 32px 24px; gap: 32px; }
-    nav { flex: none; width: 170px; }
-    nav h1 { font-size: 16px; font-weight: 500; margin: 0 0 16px; padding: 0 10px; }
+    .shell { display: flex; max-width: 880px; margin: 0 auto; padding: 48px 32px; gap: 48px; }
+    nav { flex: none; width: 190px; }
+    nav h1 {
+      margin: 0 0 20px; padding: 0 10px 16px; border-bottom: 1px solid var(--divider);
+      font-family: var(--serif); font-size: 28px; font-weight: 600; line-height: 1.1; letter-spacing: -0.01em; color: var(--bright);
+    }
     nav a {
-      display: block; padding: 7px 10px; margin-bottom: 2px; border-radius: 6px;
+      display: block; padding: 8px 10px; margin-bottom: 2px; border-radius: 6px;
       color: inherit; text-decoration: none;
     }
-    nav a:hover { background: var(--active); }
-    nav a[aria-current="page"] { background: var(--active); font-weight: 500; }
+    nav a:hover { background: var(--head); }
+    nav a[aria-current="page"] { background: var(--head); color: var(--bright); font-weight: 600; }
     /* Plain text link above the heading, not a boxed button. */
     nav .back {
       display: inline-flex; align-items: center; gap: 6px; margin: 0 0 20px; padding: 0 10px;
@@ -30,50 +53,55 @@
     main { flex: 1; min-width: 0; }
 
     .page[hidden] { display: none; }
-    .page h2 { font-size: 20px; font-weight: 500; margin: 0 0 4px; }
-    .page > .intro { color: var(--muted); margin: 0 0 20px; }
+    .page h2 {
+      margin: 0 0 4px; font-family: var(--serif); font-size: 26px; font-weight: 600;
+      letter-spacing: -0.01em; color: var(--bright);
+    }
+    .page > .intro { color: var(--muted); margin: 0 0 24px; }
 
-    .group { background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
-    .setting { display: flex; align-items: center; gap: 16px; padding: 14px 16px; }
-    .setting + .setting { border-top: 1px solid var(--border); }
+    /* Groups are ruled sections like the folder columns: a rule on top, thin lines between rows. */
+    .group { border-top: 2px solid var(--rule); }
+    .setting { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
     .setting .text { flex: 1; min-width: 0; }
-    .setting .text label, .setting .text .label { display: block; font-weight: 500; }
+    .setting .text label, .setting .text .label { display: block; font-weight: 600; color: var(--bright); }
     .setting .text .hint { margin-top: 2px; }
     .setting .control { flex: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 
     input[type="text"], input[type="number"], select {
-      min-width: 0; padding: 6px 8px; font: inherit; color: var(--fg);
-      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      min-width: 0; padding: 7px 10px; font: inherit; color: var(--fg);
+      background: var(--card); border: 1px solid var(--border); border-radius: 6px;
     }
     input[type="text"] { width: 200px; }
     input[type="number"] { width: 70px; }
-    input[type="color"] { width: 44px; height: 30px; padding: 0; border: 1px solid var(--border); background: var(--card); }
+    input[type="color"] { width: 44px; height: 32px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); }
     input[type="file"] { max-width: 220px; }
-    button { padding: 6px 12px; font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
+    input[type="checkbox"] { accent-color: var(--accent); }
+    button { padding: 7px 14px; font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
+    button:hover:not(:disabled) { border-color: var(--muted); }
     button:disabled { opacity: 0.5; cursor: default; }
-    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.primary:hover:not(:disabled) { border-color: var(--accent); }
     .hint { color: var(--muted); font-size: 12px; }
 
     .actions {
       position: sticky; bottom: 0; display: flex; align-items: center; justify-content: flex-end; gap: 8px;
-      margin-top: 24px; padding: 12px 0; background: var(--bg); border-top: 1px solid var(--border);
+      margin-top: 32px; padding: 14px 0; background: var(--bg); border-top: 1px solid var(--divider);
     }
     .actions #dirtyNote { margin-right: auto; }
 
-    .toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
+    .toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
     #folderList { display: flex; flex-direction: column; }
-    .folder { display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; }
-    .folder + .folder { border-top: 1px solid var(--border); }
+    .folder { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
     .folder .path { color: var(--muted); font-size: 12px; margin-left: auto; }
-    .no-folders { padding: 14px 16px; color: var(--muted); }
+    .no-folders { padding: 14px 0; color: var(--muted); }
 
-    #status { position: fixed; left: 50%; bottom: 72px; transform: translateX(-50%); padding: 6px 14px; border-radius: 6px; background: var(--fg); color: var(--bg); }
+    #status { position: fixed; left: 50%; bottom: 72px; transform: translateX(-50%); padding: 8px 14px; border-radius: 6px; background: var(--fg); color: var(--bg); }
     #status:empty { display: none; }
 
     @media (max-width: 640px) {
-      .shell { flex-direction: column; gap: 16px; padding: 16px; }
+      .shell { flex-direction: column; gap: 16px; padding: 24px 16px; }
       nav { width: auto; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-      nav h1 { width: 100%; padding: 0; margin-bottom: 8px; }
+      nav h1 { width: 100%; padding: 0 0 12px; margin-bottom: 8px; }
       nav .back { width: 100%; padding: 0; margin-bottom: 8px; }
       nav a { margin: 0; }
       .setting { flex-direction: column; align-items: stretch; }

@@ -73,11 +73,19 @@ function edit(p) {
   updateActions();
 }
 
+// The settings page shows the colours of the Theme being edited, so a change previews before Save.
+// 'late-edition' was the earlier name for the dark colours.
+function previewTheme(theme) {
+  const t = theme === 'late-edition' ? 'dark' : theme;
+  if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+}
+
 function fill() {
   $('columns').value = draft.columns;
   $('name').value = draft.name;
-  // 'late-edition' was the earlier name for the dark colours.
   $('theme').value = draft.theme === 'late-edition' ? 'dark' : draft.theme;
+  previewTheme(draft.theme);
   for (const mode of Object.keys(BG_DEFAULTS)) {
     const v = draft[`bgColor${mode}`];
     $(`bgColor${mode}`).value = HEX.test(v) ? v : BG_DEFAULTS[mode];
@@ -146,7 +154,10 @@ function readColumns() {
 $('columns').addEventListener('input', () => edit({ columns: readColumns() }));
 $('columns').addEventListener('change', (e) => { e.target.value = readColumns(); });
 $('name').addEventListener('input', (e) => edit({ name: e.target.value.trim() }));
-$('theme').addEventListener('change', (e) => edit({ theme: e.target.value }));
+$('theme').addEventListener('change', (e) => {
+  edit({ theme: e.target.value });
+  previewTheme(e.target.value);
+});
 for (const mode of Object.keys(BG_DEFAULTS)) {
   const key = `bgColor${mode}`;
   $(key).addEventListener('input', (e) => {
