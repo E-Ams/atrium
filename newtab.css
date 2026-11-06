@@ -450,14 +450,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 [data-theme="late-edition"] .card-head {
   gap: 12px;
-  padding: 14px 0 10px;
-  background: none;
-  /* Thin rule under the folder name, a step brighter than the row dividers. */
-  border-bottom: 1px solid #3a404c;
+  padding: 12px 10px;
+  /* A tinted band behind the folder name sets it apart from the list; it stays when collapsed. */
+  background: var(--card);
+  border-bottom: 0;
 }
-/* The rule stays when the card is collapsed, and takes the card colour when one is set. */
-[data-theme="late-edition"] .card.collapsed .card-head { border-bottom: 1px solid #3a404c; }
-[data-theme="late-edition"] .card.has-color .card-head { border-bottom-color: var(--card-color); }
+[data-theme="late-edition"] .card.has-color .card-head {
+  background: color-mix(in srgb, var(--card-color) 14%, transparent);
+}
 [data-theme="late-edition"] .card-icon {
   width: 32px;
   height: 32px;
