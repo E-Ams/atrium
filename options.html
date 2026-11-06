@@ -44,7 +44,15 @@
     input[type="color"] { width: 44px; height: 30px; padding: 0; border: 1px solid var(--border); background: var(--card); }
     input[type="file"] { max-width: 220px; }
     button { padding: 6px 12px; font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     .hint { color: var(--muted); font-size: 12px; }
+
+    .actions {
+      position: sticky; bottom: 0; display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+      margin-top: 24px; padding: 12px 0; background: var(--bg); border-top: 1px solid var(--border);
+    }
+    .actions #dirtyNote { margin-right: auto; }
 
     .toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
     #folderList { display: flex; flex-direction: column; }
@@ -53,7 +61,7 @@
     .folder .path { color: var(--muted); font-size: 12px; margin-left: auto; }
     .no-folders { padding: 14px 16px; color: var(--muted); }
 
-    #status { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); padding: 6px 14px; border-radius: 6px; background: var(--fg); color: var(--bg); }
+    #status { position: fixed; left: 50%; bottom: 72px; transform: translateX(-50%); padding: 6px 14px; border-radius: 6px; background: var(--fg); color: var(--bg); }
     #status:empty { display: none; }
 
     @media (max-width: 640px) {
@@ -128,6 +136,7 @@
             <div class="text">
               <label for="bgImage">Background image</label>
               <div class="hint">Stored on this computer only. It doesn't sync between Chrome profiles.</div>
+              <div class="hint" id="bgImageState"></div>
             </div>
             <div class="control">
               <input id="bgImage" type="file" accept="image/*">
@@ -188,6 +197,12 @@
           </div>
         </div>
       </section>
+
+      <div class="actions">
+        <span id="dirtyNote" class="hint"></span>
+        <button id="cancel" type="button" disabled>Cancel</button>
+        <button id="save" type="button" class="primary" disabled>Save</button>
+      </div>
     </main>
   </div>
 
