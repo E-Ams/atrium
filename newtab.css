@@ -455,6 +455,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   /* Thin rule under the folder name, a step brighter than the row dividers. */
   border-bottom: 1px solid #3a404c;
 }
+/* The rule stays when the card is collapsed, and takes the card colour when one is set. */
+[data-theme="late-edition"] .card.collapsed .card-head { border-bottom: 1px solid #3a404c; }
+[data-theme="late-edition"] .card.has-color .card-head { border-bottom-color: var(--card-color); }
 [data-theme="late-edition"] .card-icon {
   width: 32px;
   height: 32px;
