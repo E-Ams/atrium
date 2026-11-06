@@ -43,7 +43,9 @@ const state = {
   folders: [],
   byId: new Map(),
   cardEls: [],
-  firstMatch: null,
+  matches: [],
+  matchIndex: -1,
+  selectedUrl: null,
   columnCount: 0,
 };
 
@@ -619,17 +621,33 @@ function applySearch() {
     });
     card.classList.toggle('dim', Boolean(q) && !any);
   }
-  // First match = top-most, then left-most visible result.
-  let first = null;
-  let best = null;
-  for (const h of hits) {
-    const r = h.li.getBoundingClientRect();
-    if (!best || r.top < best.top - 1 || (Math.abs(r.top - best.top) <= 1 && r.left < best.left)) {
-      best = r;
-      first = h.url;
-    }
-  }
-  state.firstMatch = first;
+  // Arrow keys walk the matches column by column, top to bottom.
+  for (const h of hits) h.rect = h.li.getBoundingClientRect();
+  hits.sort((a, b) => (a.rect.left - b.rect.left) || (a.rect.top - b.rect.top));
+  state.matches = hits;
+  // The selection starts on the top-most, then left-most match, as Enter has always opened.
+  let start = -1;
+  hits.forEach((h, i) => {
+    const best = start >= 0 ? hits[start].rect : null;
+    if (!best || h.rect.top < best.top - 1 || (Math.abs(h.rect.top - best.top) <= 1 && h.rect.left < best.left)) start = i;
+  });
+  selectMatch(start);
+}
+
+// Highlights match i (-1 for none); Enter in the search box opens it.
+function selectMatch(i) {
+  for (const li of document.querySelectorAll('.match-selected')) li.classList.remove('match-selected');
+  state.matchIndex = i;
+  const m = state.matches[i];
+  state.selectedUrl = m ? m.url : null;
+  if (m) m.li.classList.add('match-selected');
+}
+
+function moveMatch(step) {
+  const n = state.matches.length;
+  if (!n) return;
+  selectMatch((state.matchIndex + step + n) % n);
+  state.matches[state.matchIndex].li.scrollIntoView({ block: 'nearest' });
 }
 
 /* ---------- card editor ---------- */
@@ -767,8 +785,11 @@ async function init() {
 
   $('search').addEventListener('input', applySearch);
   $('search').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && state.firstMatch) {
-      openUrl(state.firstMatch, e.ctrlKey || e.metaKey);
+    if (e.key === 'Enter' && state.selectedUrl) {
+      openUrl(state.selectedUrl, e.ctrlKey || e.metaKey);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      moveMatch(e.key === 'ArrowDown' ? 1 : -1);
     } else if (e.key === 'Escape') {
       e.target.value = '';
       applySearch();

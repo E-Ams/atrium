@@ -307,6 +307,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .card.collapsed .card-list { display: none; }
 .item { display: flex; align-items: center; gap: 8px; }
 .card .item, .card .folder-item { padding: 8px 0; border-bottom: 1px solid var(--line); }
+/* The search result that Enter opens; arrow keys move it. Padding grows into the negative margin so the row doesn't shift. */
+.card .match-selected {
+  margin: 0 -8px;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
 .favicon { flex: none; width: 16px; height: 16px; }
 .item.dim { opacity: 0.3; }
 .item-link {
