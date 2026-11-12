@@ -44,11 +44,23 @@ let draftHidden = new Set();
 let pendingImage; // undefined: no change, string: new image data URL, null: remove image
 let statusTimer;
 
-function say(msg) {
+// action: optional { label, run } shown as a button after the message, e.g. Undo.
+function say(msg, action) {
   const s = $('status');
   s.textContent = msg;
+  if (action) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'status-action';
+    b.textContent = action.label;
+    b.addEventListener('click', () => {
+      s.textContent = '';
+      action.run();
+    });
+    s.append(b);
+  }
   clearTimeout(statusTimer);
-  statusTimer = setTimeout(() => { s.textContent = ''; }, 4000);
+  statusTimer = setTimeout(() => { s.textContent = ''; }, action ? 10000 : 4000);
 }
 
 function sameHidden() {
@@ -61,8 +73,14 @@ function isDirty() {
     || Object.keys(DEFAULT_SETTINGS).some((k) => draft[k] !== saved[k]);
 }
 
+// Duplicates are deleted straight away, so the Save bar only shows there when other pages have unsaved changes.
+function showActionsBar(dirty = isDirty()) {
+  document.querySelector('.actions').hidden = location.hash === '#duplicates' && !dirty;
+}
+
 function updateActions() {
   const dirty = isDirty();
+  showActionsBar(dirty);
   $('save').disabled = !dirty;
   $('cancel').disabled = !dirty;
   $('dirtyNote').textContent = dirty ? 'You have unsaved changes.' : '';
@@ -296,12 +314,150 @@ $('foldersNone').addEventListener('click', async () => {
   updateActions();
 });
 
-const refreshFolders = (() => {
+/* ---------- duplicates ---------- */
+
+// Bookmarks are duplicates when their addresses match, ignoring letter case in the scheme and
+// host and a trailing slash. Any other difference (path, query, #hash) keeps them apart.
+function urlKey(url) {
+  let u = url;
+  try {
+    u = new URL(url).href;
+  } catch {
+    // Not a URL the browser can parse; compare it as written.
+  }
+  return u.endsWith('/') ? u.slice(0, -1) : u;
+}
+
+// Groups of two or more bookmarks for the same page, sorted by the first one's title.
+async function findDuplicates() {
+  const [root] = await chrome.bookmarks.getTree();
+  const groups = new Map();
+  const walk = (node, path) => {
+    for (const c of node.children || []) {
+      if (c.url) {
+        const key = urlKey(c.url);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push({
+          id: c.id, parentId: c.parentId, index: c.index,
+          title: c.title, url: c.url, path: path.join(' / '),
+        });
+      } else {
+        walk(c, path.concat(c.title || 'Untitled'));
+      }
+    }
+  };
+  walk(root, []);
+  return [...groups.values()]
+    .filter((g) => g.length > 1)
+    .sort((a, b) => (a[0].title || a[0].url).localeCompare(b[0].title || b[0].url));
+}
+
+function favicon(url) {
+  const img = document.createElement('img');
+  img.src = `${chrome.runtime.getURL('/_favicon/')}?pageUrl=${encodeURIComponent(url)}&size=32`;
+  img.alt = '';
+  img.loading = 'lazy';
+  return img;
+}
+
+function span(cls, text) {
+  const s = document.createElement('span');
+  s.className = cls;
+  s.textContent = text;
+  return s;
+}
+
+async function renderDuplicates() {
+  const groups = await findDuplicates();
+  const box = $('dupList');
+  box.textContent = '';
+  if (!groups.length) {
+    $('dupSummary').textContent = '';
+    const none = document.createElement('div');
+    none.className = 'no-folders';
+    none.textContent = 'No duplicate bookmarks.';
+    box.append(none);
+    return;
+  }
+  const extra = groups.reduce((n, g) => n + g.length - 1, 0);
+  $('dupSummary').textContent = `${groups.length} ${groups.length === 1 ? 'page is' : 'pages are'} bookmarked more than once `
+    + `(${extra} extra ${extra === 1 ? 'copy' : 'copies'}).`;
+  for (const g of groups) {
+    const group = document.createElement('div');
+    group.className = 'dup-group';
+    const head = document.createElement('div');
+    head.className = 'dup-head';
+    const url = span('url', g[0].url);
+    url.title = g[0].url;
+    head.append(favicon(g[0].url), url);
+    group.append(head);
+    for (const b of g) {
+      const row = document.createElement('div');
+      row.className = 'dup-row';
+      const where = span('path', b.path ? `in ${b.path}` : '');
+      where.title = b.path;
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.textContent = 'Delete';
+      del.addEventListener('click', () => deleteDuplicate(b, row, group));
+      row.append(span('name', b.title || b.url), where, del);
+      group.append(row);
+    }
+    box.append(group);
+  }
+}
+
+// Deletes one copy. The rows of a group are counted before the delete starts, so quick
+// clicks can never remove every copy of a page.
+async function deleteDuplicate(b, row, group) {
+  const left = [...group.querySelectorAll('.dup-row:not(.removing)')];
+  if (left.length < 2 || !left.includes(row)) return;
+  row.classList.add('removing');
+  const lastTwo = left.length === 2;
+  if (lastTwo) for (const btn of group.querySelectorAll('button')) btn.disabled = true;
+  try {
+    await chrome.bookmarks.remove(b.id);
+  } catch (err) {
+    row.classList.remove('removing');
+    if (lastTwo) for (const btn of group.querySelectorAll('button')) btn.disabled = false;
+    say('Could not delete that bookmark.');
+    console.warn(err);
+    return;
+  }
+  say(`Deleted "${b.title || b.url}"${b.path ? ` from ${b.path}` : ''}.`, {
+    label: 'Undo',
+    run: () => restoreDuplicate(b),
+  });
+}
+
+async function restoreDuplicate(b) {
+  try {
+    const siblings = await chrome.bookmarks.getChildren(b.parentId);
+    await chrome.bookmarks.create({
+      parentId: b.parentId,
+      index: Math.min(b.index, siblings.length),
+      title: b.title,
+      url: b.url,
+    });
+  } catch (err) {
+    say('Could not restore that bookmark.');
+    console.warn(err);
+  }
+}
+
+// Bookmark changes redraw the folder list and the duplicates, a moment after the last change.
+const refreshBookmarkViews = (() => {
   let t;
-  return () => { clearTimeout(t); t = setTimeout(renderFolders, 200); };
+  return () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      renderFolders();
+      renderDuplicates();
+    }, 200);
+  };
 })();
 for (const ev of ['onCreated', 'onRemoved', 'onChanged', 'onMoved', 'onChildrenReordered', 'onImportEnded']) {
-  chrome.bookmarks[ev].addListener(refreshFolders);
+  chrome.bookmarks[ev].addListener(refreshBookmarkViews);
 }
 
 /* ---------- export / import ---------- */
@@ -392,7 +548,7 @@ $('importFile').addEventListener('change', async (e) => {
 /* ---------- sub pages ---------- */
 
 // The page shown follows the URL hash (#general, #appearance, ...), so reload keeps your place.
-const PAGES = ['general', 'appearance', 'folders', 'weather', 'backup'];
+const PAGES = ['general', 'appearance', 'folders', 'duplicates', 'weather', 'backup'];
 
 function showPage() {
   const want = location.hash.slice(1);
@@ -402,9 +558,11 @@ function showPage() {
     if (a.getAttribute('href') === `#${name}`) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   }
+  showActionsBar();
 }
 window.addEventListener('hashchange', showPage);
 showPage();
 
 // Folders read the draft's hidden list, so render them after it is loaded.
 load().then(renderFolders);
+renderDuplicates();
