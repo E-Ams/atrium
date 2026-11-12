@@ -88,6 +88,7 @@
       margin-top: 32px; padding: 14px 0; background: var(--bg); border-top: 1px solid var(--divider);
     }
     .actions #dirtyNote { margin-right: auto; }
+    .actions[hidden] { display: none; }
 
     .toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
     #folderList { display: flex; flex-direction: column; }
@@ -97,6 +98,20 @@
 
     #status { position: fixed; left: 50%; bottom: 72px; transform: translateX(-50%); padding: 8px 14px; border-radius: 6px; background: var(--fg); color: var(--bg); }
     #status:empty { display: none; }
+    #status .status-action {
+      margin-left: 12px; padding: 0; font-weight: 600; text-decoration: underline;
+      color: inherit; background: none; border: 0; border-radius: 0;
+    }
+
+    #dupSummary { margin: -8px 0 20px; }
+    .dup-group { border-top: 2px solid var(--rule); margin-bottom: 28px; }
+    .dup-head { display: flex; align-items: center; gap: 10px; padding: 12px 0 6px; }
+    .dup-head img { flex: none; width: 16px; height: 16px; }
+    .dup-head .url { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--bright); }
+    .dup-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .dup-row .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dup-row .path { max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
+    .dup-row.removing { opacity: 0.4; }
 
     @media (max-width: 640px) {
       .shell { flex-direction: column; gap: 16px; padding: 24px 16px; }
@@ -118,6 +133,7 @@
       <a href="#general">General</a>
       <a href="#appearance">Appearance</a>
       <a href="#folders">Folders</a>
+      <a href="#duplicates">Duplicates</a>
       <a href="#weather">Weather</a>
       <a href="#backup">Backup</a>
     </nav>
@@ -200,6 +216,13 @@
           <button id="foldersNone" type="button">Hide all</button>
         </div>
         <div class="group"><div id="folderList"></div></div>
+      </section>
+
+      <section class="page" id="page-duplicates" hidden>
+        <h2>Duplicates</h2>
+        <p class="intro">Pages you've bookmarked more than once. Delete removes that copy from Chrome straight away, without Save. The last copy of a page always stays.</p>
+        <div id="dupSummary" class="hint"></div>
+        <div id="dupList"></div>
       </section>
 
       <section class="page" id="page-weather" hidden>

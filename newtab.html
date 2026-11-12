@@ -12,7 +12,8 @@
     <header id="top">
       <div id="clock"></div>
       <div id="greeting"></div>
-      <div id="meta"><span id="date"></span><span id="weather"></span></div>
+      <div id="meta"><span id="date"></span><button id="weather" type="button" hidden aria-expanded="false" aria-controls="forecast" title="Show the forecast"></button></div>
+      <div id="forecast" hidden></div>
     </header>
 
     <div id="searchwrap">
@@ -26,7 +27,10 @@
       <div id="pinned-list"></div>
     </section>
 
-    <button id="settings-btn" type="button" title="Settings" aria-label="Settings">&#9881;</button>
+    <div id="sidebar-foot">
+      <button id="settings-btn" type="button" title="Settings" aria-label="Settings">&#9881;</button>
+      <button id="collapse-all" type="button" hidden>Collapse all</button>
+    </div>
   </div>
 
   <div id="content">
@@ -42,6 +46,18 @@
       <button id="ed-close" type="button">Done</button>
     </div>
   </div>
+
+  <dialog id="bm-dialog" aria-labelledby="bm-heading">
+    <form method="dialog">
+      <h2 id="bm-heading">Edit bookmark</h2>
+      <label>Name <input id="bm-title" type="text" autocomplete="off" spellcheck="false"></label>
+      <label>URL <input id="bm-url" type="text" required autocomplete="off" spellcheck="false"></label>
+      <div class="bm-actions">
+        <button type="submit" value="cancel" formnovalidate>Cancel</button>
+        <button type="submit" value="save" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="icons.js"></script>
   <script src="newtab.js"></script>
